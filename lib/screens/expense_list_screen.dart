@@ -1,78 +1,23 @@
 import 'package:flutter/material.dart';
 import '../models/expense.dart';
+import '../managers/expense_manager.dart';
 
-class ExpenseListScreen extends StatelessWidget {
+class ExpenseListScreen extends StatefulWidget {
   const ExpenseListScreen({super.key});
 
   @override
+  State<ExpenseListScreen> createState() => _ExpenseListScreenState();
+}
+
+class _ExpenseListScreenState extends State<ExpenseListScreen> {
+  List<Expense> allExpenses = ExpenseManager.expenses; // data asli
+  List<Expense> filteredExpenses = ExpenseManager.expenses; // hasil filter
+  String keyword = "";
+
+  @override
   Widget build(BuildContext context) {
-    // Data sample menggunakan List<Expense>
-    final List<Expense> expenses = [
-      Expense(
-        id: '1',
-        title: 'Belanja Bulanan',
-        amount: 150000,
-        category: 'Makanan',
-        date: DateTime(2024, 9, 15),
-        description: 'Belanja kebutuhan bulanan di supermarket',
-      ),
-      Expense(
-        id: '2',
-        title: 'Bensin Motor',
-        amount: 50000,
-        category: 'Transportasi',
-        date: DateTime(2024, 9, 14),
-        description: 'Isi bensin motor untuk transportasi',
-      ),
-      Expense(
-        id: '3',
-        title: 'Kopi di Cafe',
-        amount: 25000,
-        category: 'Makanan',
-        date: DateTime(2024, 9, 14),
-        description: 'Ngopi pagi dengan teman',
-      ),
-      Expense(
-        id: '4',
-        title: 'Tagihan Internet',
-        amount: 300000,
-        category: 'Utilitas',
-        date: DateTime(2024, 9, 13),
-        description: 'Tagihan internet bulanan',
-      ),
-      Expense(
-        id: '5',
-        title: 'Tiket Bioskop',
-        amount: 100000,
-        category: 'Hiburan',
-        date: DateTime(2024, 9, 12),
-        description: 'Nonton film weekend bersama keluarga',
-      ),
-      Expense(
-        id: '6',
-        title: 'Beli Buku',
-        amount: 75000,
-        category: 'Pendidikan',
-        date: DateTime(2024, 9, 11),
-        description: 'Buku pemrograman untuk belajar',
-      ),
-      Expense(
-        id: '7',
-        title: 'Makan Siang',
-        amount: 35000,
-        category: 'Makanan',
-        date: DateTime(2024, 9, 11),
-        description: 'Makan siang di restoran',
-      ),
-      Expense(
-        id: '8',
-        title: 'Ongkos Bus',
-        amount: 10000,
-        category: 'Transportasi',
-        date: DateTime(2024, 9, 10),
-        description: 'Ongkos perjalanan harian ke kampus',
-      ),
-    ];
+    final highestExpense = ExpenseManager.getHighestExpense(filteredExpenses);
+    final averageDaily = ExpenseManager.getAverageDaily(filteredExpenses);
 
     return Scaffold(
       appBar: AppBar(
@@ -81,7 +26,27 @@ class ExpenseListScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Header dengan total pengeluaran
+          // 🔍 Search bar
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: "Cari pengeluaran...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  keyword = value;
+                  filteredExpenses = ExpenseManager.searchExpenses(allExpenses, keyword);
+                });
+              },
+            ),
+          ),
+
+          // Header ringkasan
           Container(
             width: double.infinity,
             padding: EdgeInsets.all(16),
@@ -92,106 +57,100 @@ class ExpenseListScreen extends StatelessWidget {
               ),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Total Pengeluaran',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                _buildSummaryRow("Total Pengeluaran", _calculateTotal(filteredExpenses)),
+                SizedBox(height: 8),
+                _buildSummaryRow(
+                  "Pengeluaran Tertinggi",
+                  highestExpense != null
+                      ? "${highestExpense.title} - ${highestExpense.formattedAmount}"
+                      : "-",
                 ),
-                Text(
-                  _calculateTotal(expenses),
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
+                SizedBox(height: 8),
+                _buildSummaryRow(
+                  "Rata-rata Harian",
+                  "Rp ${averageDaily.toStringAsFixed(0)}",
                 ),
               ],
             ),
           ),
-          // ListView untuk menampilkan daftar pengeluaran
+
+          // ListView pengeluaran
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(8),
-              itemCount: expenses.length,
-              itemBuilder: (context, index) {
-                final expense = expenses[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  elevation: 2,
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: _getCategoryColor(expense.category),
-                      child: Icon(
-                        _getCategoryIcon(expense.category),
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(
-                      expense.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          expense.category,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
+            child: filteredExpenses.isEmpty
+                ? Center(child: Text("Tidak ada pengeluaran ditemukan"))
+                : ListView.builder(
+                    padding: EdgeInsets.all(8),
+                    itemCount: filteredExpenses.length,
+                    itemBuilder: (context, index) {
+                      final expense = filteredExpenses[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        elevation: 2,
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: _getCategoryColor(expense.category),
+                            child: Icon(
+                              _getCategoryIcon(expense.category),
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
-                        ),
-                        Text(
-                          expense.formattedDate,
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 11,
+                          title: Text(expense.title,
+                              style: TextStyle(fontWeight: FontWeight.w500)),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(expense.category,
+                                  style: TextStyle(
+                                      color: Colors.grey[600], fontSize: 12)),
+                              Text(expense.formattedDate,
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 11)),
+                            ],
                           ),
+                          trailing: Text(
+                            expense.formattedAmount,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.red[600]),
+                          ),
+                          onTap: () {
+                            _showExpenseDetails(context, expense);
+                          },
                         ),
-                      ],
-                    ),
-                    trailing: Text(
-                      expense.formattedAmount,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.red[600],
-                      ),
-                    ),
-                    onTap: () {
-                      _showExpenseDetails(context, expense);
+                      );
                     },
                   ),
-                );
-              },
-            ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Fitur tambah pengeluaran segera hadir!')),
-          );
-        },
-        backgroundColor: Colors.blue,
-        child: Icon(Icons.add),
       ),
     );
   }
 
-  // Method untuk menghitung total menggunakan fold()
+  /// Ringkasan data
+  Widget _buildSummaryRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label,
+            style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+        Text(value,
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800])),
+      ],
+    );
+  }
+
   String _calculateTotal(List<Expense> expenses) {
     double total = expenses.fold(0, (sum, expense) => sum + expense.amount);
     return 'Rp ${total.toStringAsFixed(0)}';
   }
 
-  // Method untuk mendapatkan warna berdasarkan kategori
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'makanan':
@@ -209,7 +168,6 @@ class ExpenseListScreen extends StatelessWidget {
     }
   }
 
-  // Method untuk mendapatkan icon berdasarkan kategori
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
       case 'makanan':
@@ -227,7 +185,6 @@ class ExpenseListScreen extends StatelessWidget {
     }
   }
 
-  // Method untuk menampilkan detail pengeluaran dalam dialog
   void _showExpenseDetails(BuildContext context, Expense expense) {
     showDialog(
       context: context,
@@ -248,9 +205,7 @@ class ExpenseListScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Tutup'),
-          ),
+              onPressed: () => Navigator.pop(context), child: Text('Tutup')),
         ],
       ),
     );
