@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/expense.dart';
 import '../managers/expense_manager.dart';
+import '../helpers/looping_expense.dart'; // impor loopingmu
 
 class AdvancedExpenseListScreen extends StatefulWidget {
   const AdvancedExpenseListScreen({super.key});
@@ -10,7 +11,7 @@ class AdvancedExpenseListScreen extends StatefulWidget {
 }
 
 class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
-  List<Expense> expenses = ExpenseManager.expenses; // ambil data dari manager
+  List<Expense> expenses = ExpenseManager.expenses; 
   List<Expense> filteredExpenses = [];
   String selectedCategory = 'Semua';
   TextEditingController searchController = TextEditingController();
@@ -25,36 +26,34 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pengeluaran Advanced'),
+        title: const Text('Pengeluaran Advanced'),
         backgroundColor: Colors.blue,
       ),
       body: Column(
         children: [
           // Search bar
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: TextField(
               controller: searchController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Cari pengeluaran...',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) {
-                _filterExpenses();
-              },
+              onChanged: (value) => _filterExpenses(),
             ),
           ),
 
           // Category filter
-          Container(
+          SizedBox(
             height: 50,
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               children: ['Semua', 'Makanan', 'Transportasi', 'Utilitas', 'Hiburan', 'Pendidikan']
                   .map((category) => Padding(
-                        padding: EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: 8),
                         child: FilterChip(
                           label: Text(category),
                           selected: selectedCategory == category,
@@ -72,11 +71,11 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
 
           // Statistics summary
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatCard('Total', _calculateTotal(filteredExpenses)),
+                _buildStatCard('Total', 'Rp ${LoopingExamples.calculateTotalFold().toStringAsFixed(0)}'),
                 _buildStatCard('Jumlah', '${filteredExpenses.length} item'),
                 _buildStatCard('Rata-rata', _calculateAverage(filteredExpenses)),
               ],
@@ -86,13 +85,13 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
           // Expense list
           Expanded(
             child: filteredExpenses.isEmpty
-                ? Center(child: Text('Tidak ada pengeluaran ditemukan'))
+                ? const Center(child: Text('Tidak ada pengeluaran ditemukan'))
                 : ListView.builder(
                     itemCount: filteredExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = filteredExpenses[index];
                       return Card(
-                        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor: _getCategoryColor(expense.category),
@@ -135,24 +134,15 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
   Widget _buildStatCard(String label, String value) {
     return Column(
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
-        Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       ],
     );
   }
 
-  String _calculateTotal(List<Expense> expenses) {
-    double total = expenses.fold(0, (sum, expense) => sum + expense.amount);
-    return 'Rp ${total.toStringAsFixed(0)}';
-  }
-
   String _calculateAverage(List<Expense> expenses) {
     if (expenses.isEmpty) return 'Rp 0';
-    double average = expenses.fold<double>(
-  0.0,
-  (sum, expense) => sum + expense.amount,
-) / expenses.length;
-
+    double average = expenses.fold(0.0, (sum, expense) => sum + expense.amount) / expenses.length;
     return 'Rp ${average.toStringAsFixed(0)}';
   }
 
@@ -200,18 +190,18 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Jumlah: ${expense.formattedAmount}'),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text('Kategori: ${expense.category}'),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text('Tanggal: ${expense.formattedDate}'),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text('Deskripsi: ${expense.description}'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Tutup'),
+            child: const Text('Tutup'),
           ),
         ],
       ),
