@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/expense.dart';
 import '../managers/expense_manager.dart';
+import '../managers/category_manager.dart';
+import 'add_expense_screen.dart';
 import '../helpers/looping_expense.dart'; // impor loopingmu
 
 class AdvancedExpenseListScreen extends StatefulWidget {
   const AdvancedExpenseListScreen({super.key});
 
   @override
-  _AdvancedExpenseListScreenState createState() => _AdvancedExpenseListScreenState();
+  _AdvancedExpenseListScreenState createState() =>
+      _AdvancedExpenseListScreenState();
 }
 
-class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
-  List<Expense> expenses = ExpenseManager.expenses; 
+class _AdvancedExpenseListScreenState
+    extends State<AdvancedExpenseListScreen> {
+  List<Expense> expenses = ExpenseManager.expenses;
   List<Expense> filteredExpenses = [];
   String selectedCategory = 'Semua';
   TextEditingController searchController = TextEditingController();
@@ -51,21 +55,36 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: ['Semua', 'Makanan', 'Transportasi', 'Utilitas', 'Hiburan', 'Pendidikan']
-                  .map((category) => Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(category),
-                          selected: selectedCategory == category,
-                          onSelected: (selected) {
-                            setState(() {
-                              selectedCategory = category;
-                              _filterExpenses();
-                            });
-                          },
-                        ),
-                      ))
-                  .toList(),
+              children: [
+                // Filter "Semua"
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: const Text('Semua'),
+                    selected: selectedCategory == 'Semua',
+                    onSelected: (selected) {
+                      setState(() {
+                        selectedCategory = 'Semua';
+                        _filterExpenses();
+                      });
+                    },
+                  ),
+                ),
+                // Filter kategori dinamis
+                ...CategoryManager.categories.map((category) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: Text(category.name),
+                        selected: selectedCategory == category.name,
+                        onSelected: (selected) {
+                          setState(() {
+                            selectedCategory = category.name;
+                            _filterExpenses();
+                          });
+                        },
+                      ),
+                    )),
+              ],
             ),
           ),
 
@@ -75,7 +94,9 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatCard('Total', 'Rp ${LoopingExamples.calculateTotalFold().toStringAsFixed(0)}'),
+                _buildStatCard(
+                    'Total',
+                    'Rp ${LoopingExamples.calculateTotalFold().toStringAsFixed(0)}'),
                 _buildStatCard('Jumlah', '${filteredExpenses.length} item'),
                 _buildStatCard('Rata-rata', _calculateAverage(filteredExpenses)),
               ],
@@ -91,14 +112,18 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                     itemBuilder: (context, index) {
                       final expense = filteredExpenses[index];
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: _getCategoryColor(expense.category),
-                            child: Icon(_getCategoryIcon(expense.category), color: Colors.white),
+                            backgroundColor:
+                                _getCategoryColor(expense.category),
+                            child: Icon(_getCategoryIcon(expense.category),
+                                color: Colors.white),
                           ),
                           title: Text(expense.title),
-                          subtitle: Text('${expense.category} • ${expense.formattedDate}'),
+                          subtitle:
+                              Text('${expense.category} • ${expense.formattedDate}'),
                           trailing: Text(
                             expense.formattedAmount,
                             style: TextStyle(
@@ -114,6 +139,22 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigasi ke AddExpenseScreen
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddExpenseScreen()),
+          ).then((value) {
+            // Refresh list setelah kembali dari AddExpenseScreen
+            setState(() {
+              filteredExpenses = ExpenseManager.expenses;
+            });
+          });
+        },
+        child: const Icon(Icons.add),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 
@@ -121,10 +162,15 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     setState(() {
       filteredExpenses = expenses.where((expense) {
         bool matchesSearch = searchController.text.isEmpty ||
-            expense.title.toLowerCase().contains(searchController.text.toLowerCase()) ||
-            expense.description.toLowerCase().contains(searchController.text.toLowerCase());
+            expense.title
+                .toLowerCase()
+                .contains(searchController.text.toLowerCase()) ||
+            expense.description
+                .toLowerCase()
+                .contains(searchController.text.toLowerCase());
 
-        bool matchesCategory = selectedCategory == 'Semua' || expense.category == selectedCategory;
+        bool matchesCategory =
+            selectedCategory == 'Semua' || expense.category == selectedCategory;
 
         return matchesSearch && matchesCategory;
       }).toList();
@@ -135,14 +181,17 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     return Column(
       children: [
         Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(value,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       ],
     );
   }
 
   String _calculateAverage(List<Expense> expenses) {
     if (expenses.isEmpty) return 'Rp 0';
-    double average = expenses.fold(0.0, (sum, expense) => sum + expense.amount) / expenses.length;
+    double average =
+        expenses.fold(0.0, (sum, expense) => sum + expense.amount) /
+            expenses.length;
     return 'Rp ${average.toStringAsFixed(0)}';
   }
 

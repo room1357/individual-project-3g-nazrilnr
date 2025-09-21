@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
-import 'expense_list_screen.dart';
 import 'profile_screen.dart';
 import 'pesan_screen.dart';
 import 'pengaturan_screen.dart';
 import 'advenced_expense_list_screen.dart';
+import 'category_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -13,66 +13,107 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Beranda'),
+        title: const Text('Beranda'),
         backgroundColor: Colors.blue,
         actions: [
           IconButton(
+            icon: const Icon(Icons.logout),
             onPressed: () {
               // Logout dengan pushAndRemoveUntil
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false, // Hapus semua route sebelumnya
+                (route) => false,
               );
             },
-            icon: Icon(Icons.logout),
           ),
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Dashboard',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  _buildDashboardCard('Pengeluaran', Icons.attach_money, Colors.green, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AdvancedExpenseListScreen()),
-                    );
-                  }),
-                  _buildDashboardCard('Profil', Icons.person, Colors.blue, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ProfileScreen()),
-                    );
-                  }),
-                  _buildDashboardCard('Pesan', Icons.message, Colors.orange, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const PesanScreen()),
-                    );
-                  }),
-                  _buildDashboardCard('Pengaturan', Icons.settings, Colors.purple, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const PengaturanScreen()),
-                    );
-                  }),
+                  _buildDashboardCard(
+                    title: 'Pengeluaran',
+                    icon: Icons.attach_money,
+                    color: Colors.green,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AdvancedExpenseListScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDashboardCard(
+                    title: 'Kategori',
+                    icon: Icons.category,
+                    color: Colors.teal,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CategoryScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDashboardCard(
+                    title: 'Profil',
+                    icon: Icons.person,
+                    color: Colors.blue,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDashboardCard(
+                    title: 'Pesan',
+                    icon: Icons.message,
+                    color: Colors.orange,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PesanScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDashboardCard(
+                    title: 'Pengaturan',
+                    icon: Icons.settings,
+                    color: Colors.purple,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PengaturanScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -82,25 +123,34 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDashboardCard(String title, IconData icon, Color color, VoidCallback? onTap) {
+  Widget _buildDashboardCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return Card(
-      elevation: 4,
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.all(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 48, color: color),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
-              ),
+              )
             ],
           ),
         ),
