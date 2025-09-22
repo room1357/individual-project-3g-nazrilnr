@@ -3,7 +3,8 @@ import '../models/expense.dart';
 import '../managers/expense_manager.dart';
 import '../managers/category_manager.dart';
 import 'add_expense_screen.dart';
-import '../helpers/looping_expense.dart'; // impor loopingmu
+import 'edit_expense_screen.dart';
+import '../helpers/looping_expense.dart';
 
 class AdvancedExpenseListScreen extends StatefulWidget {
   const AdvancedExpenseListScreen({super.key});
@@ -56,7 +57,6 @@ class _AdvancedExpenseListScreenState
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                // Filter "Semua"
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
@@ -70,7 +70,6 @@ class _AdvancedExpenseListScreenState
                     },
                   ),
                 ),
-                // Filter kategori dinamis
                 ...CategoryManager.categories.map((category) => Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: FilterChip(
@@ -140,16 +139,13 @@ class _AdvancedExpenseListScreenState
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigasi ke AddExpenseScreen
-          Navigator.push(
+        onPressed: () async {
+          await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddExpenseScreen()),
-          ).then((value) {
-            // Refresh list setelah kembali dari AddExpenseScreen
-            setState(() {
-              filteredExpenses = ExpenseManager.expenses;
-            });
+            MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
+          );
+          setState(() {
+            filteredExpenses = ExpenseManager.expenses;
           });
         },
         child: const Icon(Icons.add),
@@ -239,11 +235,11 @@ class _AdvancedExpenseListScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Jumlah: ${expense.formattedAmount}'),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text('Kategori: ${expense.category}'),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text('Tanggal: ${expense.formattedDate}'),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text('Deskripsi: ${expense.description}'),
           ],
         ),
@@ -251,6 +247,58 @@ class _AdvancedExpenseListScreenState
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Tutup'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // tutup detail
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        EditExpenseScreen(expense: expense)),
+              );
+              setState(() {
+                filteredExpenses = ExpenseManager.expenses;
+              });
+            },
+            child: const Text('Edit'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Konfirmasi delete
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Hapus Pengeluaran'),
+                  content: const Text(
+                      'Apakah kamu yakin ingin menghapus pengeluaran ini?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Batal'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        ExpenseManager.deleteExpense(expense.id);
+                        Navigator.pop(context); // tutup konfirmasi
+                        Navigator.pop(context); // tutup detail
+                        setState(() {
+                          filteredExpenses = ExpenseManager.expenses;
+                        });
+                      },
+                      child: const Text(
+                        'Hapus',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Text(
+              'Hapus',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),

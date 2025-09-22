@@ -113,4 +113,9 @@ class ExpenseManager {
     
     return total / uniqueDays.length;
   }
+
+   // Method untuk menghapus expense
+  static void deleteExpense(String id) {
+    expenses.removeWhere((expense) => expense.id == id);
+  }
 }
