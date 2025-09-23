@@ -1,13 +1,9 @@
-# 👋 Halo, Kenalan Dulu Yuk!  
-
 <p align="center">
   <img src="https://media.giphy.com/media/hvRJCLFzcasrR4ia7z/giphy.gif" width="120px">
 </p>
 
-## 😎 Siapa Aku?
-Halo semua!  
-Namaku **Muhammad Nazril Nur Rahman**.  
-Repo ini dibuat khusus sebagai **project perkenalan diri** (tugas dari dosen ✨).  
+ **Muhammad Nazril Nur Rahman**.  
+ **2341760174**
 
 ---
 
