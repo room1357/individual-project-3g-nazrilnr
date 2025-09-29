@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide DateUtils;
 import '../../models/expense.dart';
+import '../../models/category.dart';
 import '../../service/expense_service.dart';
 import 'add_expense_screen.dart';
 import 'edit_expense_screen.dart';
+import '../../utils/currency_utils.dart';
+import '../../utils/date_utils.dart';
 
 class AdvancedExpenseListScreen extends StatefulWidget {
   const AdvancedExpenseListScreen({super.key});
@@ -13,18 +16,25 @@ class AdvancedExpenseListScreen extends StatefulWidget {
 }
 
 class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
+  // Future yang mengelola status pemuatan data awal
   Future<void>? _dataFuture;
+  // Variabel untuk melacak kategori yang dipilih saat ini
   String selectedCategory = 'Semua';
+  // Controller untuk mengelola input pada kolom pencarian
   TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    // Memulai pemuatan data saat widget pertama kali dibuat
     _dataFuture = _loadInitialData();
   }
 
+  // Metode asinkron untuk memuat data awal dari service
   Future<void> _loadInitialData() async {
+    // Memanggil ExpenseService untuk memuat data dari penyimpanan
     await ExpenseService().loadInitialData();
+    // Memicu rebuild UI setelah data berhasil dimuat
     setState(() {});
   }
 
@@ -50,14 +60,20 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
       body: FutureBuilder<void>(
         future: _dataFuture,
         builder: (context, snapshot) {
+          // Menampilkan indikator loading saat data sedang dimuat
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+          // Menampilkan pesan error jika ada masalah saat memuat data
           if (snapshot.hasError) {
             return const Center(child: Text('Terjadi kesalahan saat memuat data.'));
           }
 
+          // Mengambil data pengeluaran dan kategori dari ExpenseService
           final expenses = ExpenseService().expenses;
+          final categories = ExpenseService().categories;
+
+          // Logika untuk memfilter pengeluaran berdasarkan pencarian dan kategori
           final filteredExpenses = expenses.where((expense) {
             bool matchesSearch = searchController.text.isEmpty ||
                 expense.title.toLowerCase().contains(searchController.text.toLowerCase()) ||
@@ -72,6 +88,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Kolom pencarian pengeluaran
                 TextField(
                   controller: searchController,
                   decoration: InputDecoration(
@@ -87,22 +104,24 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                   onChanged: (value) => setState(() {}),
                 ),
                 const SizedBox(height: 16),
+                // Daftar chip kategori yang bisa di-scroll
                 SizedBox(
                   height: 40,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: [
-                      ..._buildCategoryChips(),
+                      ..._buildCategoryChips(categories),
                     ],
                   ),
                 ),
                 const SizedBox(height: 25),
+                // Kartu statistik (Total, Jumlah, Rata-rata)
                 Row(
                   children: [
                     Expanded(
                       child: _buildStatCard(
                         label: 'Total',
-                        value: 'Rp ${_calculateFilteredTotal(filteredExpenses).toStringAsFixed(0)}',
+                        value: CurrencyUtils.formatCurrency(_calculateFilteredTotal(filteredExpenses)),
                         colors: [Colors.green.shade400, Colors.green.shade200],
                       ),
                     ),
@@ -118,13 +137,14 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                     Expanded(
                       child: _buildStatCard(
                         label: 'Rata-rata',
-                        value: _calculateAverage(filteredExpenses),
+                        value: CurrencyUtils.formatCurrency(_calculateAverage(filteredExpenses)),
                         colors: [Colors.orange.shade400, Colors.orange.shade200],
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 25),
+                // Judul "Daftar Pengeluaran"
                 const Text(
                   "Daftar Pengeluaran",
                   style: TextStyle(
@@ -134,7 +154,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Kode di bawah ini yang diperbarui
+                // Tampilan daftar pengeluaran atau pesan jika kosong
                 if (filteredExpenses.isEmpty)
                   const Center(
                     child: Padding(
@@ -149,8 +169,10 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
           );
         },
       ),
+      // Tombol tambah pengeluaran baru
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
+          // Navigasi ke layar tambah, lalu muat ulang data saat kembali
           await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
@@ -163,8 +185,8 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     );
   }
 
-  List<Widget> _buildCategoryChips() {
-    final categories = ExpenseService().categories;
+  // Widget helper untuk membuat chip kategori
+  List<Widget> _buildCategoryChips(List<Category> categories) {
     return [
       Padding(
         padding: const EdgeInsets.only(right: 8),
@@ -193,6 +215,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     ];
   }
 
+  // Widget helper untuk membuat kartu statistik
   Widget _buildStatCard({
     required String label,
     required String value,
@@ -240,17 +263,20 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     );
   }
 
-  String _calculateAverage(List<Expense> expenses) {
-    if (expenses.isEmpty) return 'Rp 0';
+  // Fungsi untuk menghitung rata-rata pengeluaran yang difilter
+  double _calculateAverage(List<Expense> expenses) {
+    if (expenses.isEmpty) return 0.0;
     double average = expenses.fold(0.0, (sum, expense) => sum + expense.amount) / expenses.length;
-    return 'Rp ${average.toStringAsFixed(0)}';
+    return average;
   }
 
+  // Fungsi untuk menghitung total pengeluaran yang difilter
   double _calculateFilteredTotal(List<Expense> expenses) {
     if (expenses.isEmpty) return 0.0;
     return expenses.fold(0.0, (sum, expense) => sum + expense.amount);
   }
 
+  // Fungsi untuk mendapatkan warna berdasarkan kategori
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'makanan': return Colors.orange;
@@ -262,6 +288,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     }
   }
 
+  // Fungsi untuk mendapatkan ikon berdasarkan kategori
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
       case 'makanan': return Icons.restaurant;
@@ -273,6 +300,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     }
   }
 
+  // Widget helper untuk membuat item daftar pengeluaran
   Widget _buildExpenseListItem(BuildContext context, Expense expense) {
     return InkWell(
       onTap: () => _showExpenseDetails(context, expense),
@@ -311,14 +339,14 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${expense.category} • ${expense.formattedDate}',
+                    '${expense.category} • ${DateUtils.formatDate(expense.date)}',
                     style: const TextStyle(color: Colors.black54),
                   ),
                 ],
               ),
             ),
             Text(
-              expense.formattedAmount,
+              CurrencyUtils.formatCurrency(expense.amount),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -331,6 +359,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     );
   }
 
+  // Dialog untuk menampilkan detail pengeluaran
   void _showExpenseDetails(BuildContext context, Expense expense) {
     showDialog(
       context: context,
@@ -344,9 +373,9 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailRow('Jumlah', expense.formattedAmount, Colors.blue),
+            _buildDetailRow('Jumlah', CurrencyUtils.formatCurrency(expense.amount), Colors.blue),
             _buildDetailRow('Kategori', expense.category, Colors.green),
-            _buildDetailRow('Tanggal', expense.formattedDate, Colors.orange),
+            _buildDetailRow('Tanggal', DateUtils.formatDate(expense.date), Colors.orange),
             _buildDetailRow('Deskripsi', expense.description, Colors.purple),
           ],
         ),
@@ -416,6 +445,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     );
   }
 
+  // Widget helper untuk membuat baris detail di dialog
   Widget _buildDetailRow(String label, String value, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),

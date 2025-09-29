@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/expense.dart';
 import '../../models/category.dart';
 import 'package:uuid/uuid.dart';
-import '../../service/expense_service.dart';
+import '../../service/expense_service.dart'; // Import service untuk manajemen data
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -12,23 +12,29 @@ class AddExpenseScreen extends StatefulWidget {
 }
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
+  // Key global untuk validasi formulir
   final _formKey = GlobalKey<FormState>();
+  // Controllers untuk mengambil input teks dari pengguna
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
+  // Variabel untuk menyimpan kategori dan tanggal yang dipilih
   Category? _selectedCategory;
   DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
+    // Mengambil daftar kategori dari ExpenseService saat layar dimuat
     final categories = ExpenseService().categories;
+    // Mengatur kategori pertama sebagai nilai default jika ada
     if (categories.isNotEmpty) {
       _selectedCategory = categories.first;
     }
   }
 
+  // Metode untuk menampilkan dialog pemilih tanggal (date picker)
   void _pickDate() async {
     DateTime? picked = await showDatePicker(
       context: context,
@@ -37,6 +43,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       lastDate: DateTime(2100),
     );
 
+    // Memperbarui tanggal yang dipilih jika pengguna memilih tanggal
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
@@ -44,24 +51,59 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
   }
 
+  // Metode untuk menyimpan pengeluaran baru setelah validasi
   void _saveExpense() {
+    // Memastikan semua field formulir valid
     if (_formKey.currentState!.validate()) {
+      // Membuat objek Expense baru dari input pengguna
       final newExpense = Expense(
-        id: const Uuid().v4(),
+        id: const Uuid().v4(), // Menggunakan Uuid untuk ID unik
         title: _titleController.text,
-        amount: double.parse(_amountController.text),
+        amount: double.parse(_amountController.text), // Mengonversi string ke double
         category: _selectedCategory!.name,
         date: _selectedDate,
         description: _descriptionController.text,
       );
 
+      // Memanggil ExpenseService untuk menyimpan pengeluaran
       ExpenseService().addExpense(newExpense);
+      // Kembali ke layar sebelumnya
       Navigator.pop(context);
     }
   }
 
+  // Metode helper untuk styling input field yang konsisten
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.blue, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.white, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+    );
+  }
+
   @override
     Widget build(BuildContext context) {
+    // Mengambil daftar kategori dari service untuk dropdown
     final categories = ExpenseService().categories;
 
     return Scaffold(
@@ -174,34 +216,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Colors.blue, width: 2),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Colors.white, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Colors.red, width: 2),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: const BorderSide(color: Colors.red, width: 2),
       ),
     );
   }
