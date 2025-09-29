@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/expense.dart';
-import '../../managers/expense_manager.dart';
-import '../../managers/category_manager.dart';
 import '../../models/category.dart';
 import 'package:uuid/uuid.dart';
+import '../../service/expense_service.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -24,8 +23,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    if (CategoryManager.categories.isNotEmpty) {
-      _selectedCategory = CategoryManager.categories.first;
+    final categories = ExpenseService().categories;
+    if (categories.isNotEmpty) {
+      _selectedCategory = categories.first;
     }
   }
 
@@ -45,7 +45,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   void _saveExpense() {
-    // Memastikan validasi berhasil sebelum menyimpan
     if (_formKey.currentState!.validate()) {
       final newExpense = Expense(
         id: const Uuid().v4(),
@@ -56,14 +55,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         description: _descriptionController.text,
       );
 
-      ExpenseManager.expenses.add(newExpense);
-
+      ExpenseService().addExpense(newExpense);
       Navigator.pop(context);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+    Widget build(BuildContext context) {
+    final categories = ExpenseService().categories;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
@@ -92,7 +92,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 controller: _amountController,
                 decoration: _inputDecoration('Jumlah'),
                 keyboardType: TextInputType.number,
-                // Validasi untuk memastikan input adalah angka
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Masukkan jumlah';
@@ -106,8 +105,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               const SizedBox(height: 16),
               DropdownButtonFormField<Category>(
                 value: _selectedCategory,
-                items: CategoryManager.categories
-                    .map((cat) => DropdownMenuItem(
+                items: categories
+                    .map((cat) => DropdownMenuItem<Category>( // Perbaikan di sini
                           value: cat,
                           child: Text(cat.name),
                         ))
@@ -118,7 +117,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   });
                 },
                 decoration: _inputDecoration('Kategori'),
-                // Validasi untuk memastikan kategori dipilih
                 validator: (value) =>
                     value == null ? 'Pilih kategori' : null,
               ),
@@ -197,11 +195,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         borderRadius: BorderRadius.circular(15),
         borderSide: const BorderSide(color: Colors.white, width: 2),
       ),
-      errorBorder: OutlineInputBorder( // Menambahkan border untuk error
+      errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
         borderSide: const BorderSide(color: Colors.red, width: 2),
       ),
-      focusedErrorBorder: OutlineInputBorder( // Menambahkan border saat error dan fokus
+      focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
         borderSide: const BorderSide(color: Colors.red, width: 2),
       ),

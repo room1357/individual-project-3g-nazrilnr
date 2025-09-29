@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../models/expense.dart';
-import '../../managers/expense_manager.dart';
-import '../../managers/category_manager.dart';
+import '../../models/category.dart';
+import '../../service/expense_service.dart';
 import 'add_expense_screen.dart';
 import 'edit_expense_screen.dart';
-import '../../helpers/looping_expense.dart';
 
 class AdvancedExpenseListScreen extends StatefulWidget {
   const AdvancedExpenseListScreen({super.key});
@@ -15,15 +14,19 @@ class AdvancedExpenseListScreen extends StatefulWidget {
 }
 
 class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
-  List<Expense> expenses = ExpenseManager.expenses;
-  List<Expense> filteredExpenses = [];
+  Future<void>? _dataFuture;
   String selectedCategory = 'Semua';
   TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    filteredExpenses = expenses;
+    _dataFuture = _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    await ExpenseService().loadInitialData();
+    setState(() {});
   }
 
   @override
@@ -45,93 +48,107 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
         elevation: 0,
         foregroundColor: Colors.blue,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                hintText: 'Cari pengeluaran...',
-                prefixIcon: const Icon(Icons.search, color: Colors.blue),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (value) => _filterExpenses(),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  ..._buildCategoryChips(),
-                ],
-              ),
-            ),
-            const SizedBox(height: 25),
+      body: FutureBuilder<void>(
+        future: _dataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('Terjadi kesalahan saat memuat data.'));
+          }
 
-            // Menggunakan Row dan Expanded untuk mengisi ruang yang kosong
-            Row(
+          final expenses = ExpenseService().expenses;
+          final filteredExpenses = expenses.where((expense) {
+            bool matchesSearch = searchController.text.isEmpty ||
+                expense.title.toLowerCase().contains(searchController.text.toLowerCase()) ||
+                expense.description.toLowerCase().contains(searchController.text.toLowerCase());
+            bool matchesCategory =
+                selectedCategory == 'Semua' || expense.category == selectedCategory;
+            return matchesSearch && matchesCategory;
+          }).toList();
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildStatCard(
-                    label: 'Total',
-                    value: 'Rp ${LoopingExamples.calculateFilteredTotal(filteredExpenses).toStringAsFixed(0)}',
-                    colors: [Colors.green.shade400, Colors.green.shade200],
+                TextField(
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: 'Cari pengeluaran...',
+                    prefixIcon: const Icon(Icons.search, color: Colors.blue),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (value) => setState(() {}),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      ..._buildCategoryChips(),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    label: 'Jumlah',
-                    value: '${filteredExpenses.length} item',
-                    colors: [Colors.blue.shade400, Colors.blue.shade200],
+                const SizedBox(height: 25),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        label: 'Total',
+                        value: 'Rp ${_calculateFilteredTotal(filteredExpenses).toStringAsFixed(0)}',
+                        colors: [Colors.green.shade400, Colors.green.shade200],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        label: 'Jumlah',
+                        value: '${filteredExpenses.length} item',
+                        colors: [Colors.blue.shade400, Colors.blue.shade200],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        label: 'Rata-rata',
+                        value: _calculateAverage(filteredExpenses),
+                        colors: [Colors.orange.shade400, Colors.orange.shade200],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 25),
+                const Text(
+                  "Daftar Pengeluaran",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    label: 'Rata-rata',
-                    value: _calculateAverage(filteredExpenses),
-                    colors: [Colors.orange.shade400, Colors.orange.shade200],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 25),
-            const Text(
-              "Daftar Pengeluaran",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 10),
-            filteredExpenses.isEmpty
-                ? const Center(
+                const SizedBox(height: 10),
+                // Kode di bawah ini yang diperbarui
+                if (filteredExpenses.isEmpty)
+                  const Center(
                     child: Padding(
                       padding: EdgeInsets.all(20.0),
                       child: Text('Tidak ada pengeluaran ditemukan'),
-                    ))
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredExpenses.length,
-                    itemBuilder: (context, index) {
-                      final expense = filteredExpenses[index];
-                      return _buildExpenseListItem(context, expense);
-                    },
-                  ),
-          ],
-        ),
+                    ),
+                  )
+                else
+                  ...filteredExpenses.map((expense) => _buildExpenseListItem(context, expense)).toList(),
+              ],
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -139,9 +156,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
             context,
             MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
           );
-          setState(() {
-            _filterExpenses();
-          });
+          _loadInitialData();
         },
         child: const Icon(Icons.add),
         backgroundColor: Colors.blue,
@@ -150,6 +165,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
   }
 
   List<Widget> _buildCategoryChips() {
+    final categories = ExpenseService().categories;
     return [
       Padding(
         padding: const EdgeInsets.only(right: 8),
@@ -159,12 +175,11 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
           onSelected: (selected) {
             setState(() {
               selectedCategory = 'Semua';
-              _filterExpenses();
             });
           },
         ),
       ),
-      ...CategoryManager.categories.map((category) => Padding(
+      ...categories.map((category) => Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
               label: Text(category.name),
@@ -172,29 +187,11 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
               onSelected: (selected) {
                 setState(() {
                   selectedCategory = category.name;
-                  _filterExpenses();
                 });
               },
             ),
           )),
     ];
-  }
-
-  void _filterExpenses() {
-    setState(() {
-      filteredExpenses = expenses.where((expense) {
-        bool matchesSearch = searchController.text.isEmpty ||
-            expense.title
-                .toLowerCase()
-                .contains(searchController.text.toLowerCase()) ||
-            expense.description
-                .toLowerCase()
-                .contains(searchController.text.toLowerCase());
-        bool matchesCategory =
-            selectedCategory == 'Semua' || expense.category == selectedCategory;
-        return matchesSearch && matchesCategory;
-      }).toList();
-    });
   }
 
   Widget _buildStatCard({
@@ -246,43 +243,34 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
 
   String _calculateAverage(List<Expense> expenses) {
     if (expenses.isEmpty) return 'Rp 0';
-    double average =
-        expenses.fold(0.0, (sum, expense) => sum + expense.amount) /
-            expenses.length;
+    double average = expenses.fold(0.0, (sum, expense) => sum + expense.amount) / expenses.length;
     return 'Rp ${average.toStringAsFixed(0)}';
+  }
+
+  double _calculateFilteredTotal(List<Expense> expenses) {
+    if (expenses.isEmpty) return 0.0;
+    return expenses.fold(0.0, (sum, expense) => sum + expense.amount);
   }
 
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
-      case 'makanan':
-        return Colors.orange;
-      case 'transportasi':
-        return Colors.green;
-      case 'utilitas':
-        return Colors.purple;
-      case 'hiburan':
-        return Colors.pink;
-      case 'pendidikan':
-        return Colors.blue;
-      default:
-        return Colors.grey;
+      case 'makanan': return Colors.orange;
+      case 'transportasi': return Colors.green;
+      case 'utilitas': return Colors.purple;
+      case 'hiburan': return Colors.pink;
+      case 'pendidikan': return Colors.blue;
+      default: return Colors.grey;
     }
   }
 
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
-      case 'makanan':
-        return Icons.restaurant;
-      case 'transportasi':
-        return Icons.directions_car;
-      case 'utilitas':
-        return Icons.home;
-      case 'hiburan':
-        return Icons.movie;
-      case 'pendidikan':
-        return Icons.school;
-      default:
-        return Icons.attach_money;
+      case 'makanan': return Icons.restaurant;
+      case 'transportasi': return Icons.directions_car;
+      case 'utilitas': return Icons.home;
+      case 'hiburan': return Icons.movie;
+      case 'pendidikan': return Icons.school;
+      default: return Icons.attach_money;
     }
   }
 
@@ -308,8 +296,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
           children: [
             CircleAvatar(
               backgroundColor: _getCategoryColor(expense.category),
-              child: Icon(_getCategoryIcon(expense.category),
-                  color: Colors.white),
+              child: Icon(_getCategoryIcon(expense.category), color: Colors.white),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -349,23 +336,27 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(expense.title),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          expense.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Jumlah: ${expense.formattedAmount}'),
-            const SizedBox(height: 8),
-            Text('Kategori: ${expense.category}'),
-            const SizedBox(height: 8),
-            Text('Tanggal: ${expense.formattedDate}'),
-            const SizedBox(height: 8),
-            Text('Deskripsi: ${expense.description}'),
+            _buildDetailRow('Jumlah', expense.formattedAmount, Colors.blue),
+            _buildDetailRow('Kategori', expense.category, Colors.green),
+            _buildDetailRow('Tanggal', expense.formattedDate, Colors.orange),
+            _buildDetailRow('Deskripsi', expense.description, Colors.purple),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.grey.shade600,
+            ),
             child: const Text('Tutup'),
           ),
           TextButton(
@@ -376,10 +367,11 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                 MaterialPageRoute(
                     builder: (context) => EditExpenseScreen(expense: expense)),
               );
-              setState(() {
-                _filterExpenses();
-              });
+              _loadInitialData();
             },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.blue,
+            ),
             child: const Text('Edit'),
           ),
           TextButton(
@@ -387,35 +379,65 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   title: const Text('Hapus Pengeluaran'),
                   content: const Text(
                       'Apakah kamu yakin ingin menghapus pengeluaran ini?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.grey.shade600,
+                      ),
                       child: const Text('Batal'),
                     ),
                     TextButton(
                       onPressed: () {
-                        ExpenseManager.deleteExpense(expense.id);
+                        ExpenseService().deleteExpense(expense.id);
                         Navigator.pop(context);
                         Navigator.pop(context);
-                        setState(() {
-                          _filterExpenses();
-                        });
+                        _loadInitialData();
                       },
-                      child: const Text(
-                        'Hapus',
-                        style: TextStyle(color: Colors.red),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
                       ),
+                      child: const Text('Hapus'),
                     ),
                   ],
                 ),
               );
             },
-            child: const Text(
-              'Hapus',
-              style: TextStyle(color: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: 14,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 14,
+              ),
             ),
           ),
         ],

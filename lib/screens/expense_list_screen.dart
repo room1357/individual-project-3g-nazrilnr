@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/expense.dart';
-import '../helpers/looping_expense.dart';
 
 class ExpenseListScreen extends StatelessWidget {
   const ExpenseListScreen({super.key});
@@ -101,22 +100,14 @@ class ExpenseListScreen extends StatelessWidget {
                     color: Colors.grey[600],
                   ),
                 ),
-                // Text(
-                //   _calculateTotal(expenses),
-                //   style: TextStyle(
-                //     fontSize: 24,
-                //     fontWeight: FontWeight.bold,
-                //     color: Colors.blue,
-                //   ),
-                // ),
                 Text(
-                'Rp ${LoopingExamples.calculateTotalFold().toStringAsFixed(0)}',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
+                  _calculateTotal(expenses),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
                 ),
-              )
               ],
             ),
           ),
@@ -195,10 +186,10 @@ class ExpenseListScreen extends StatelessWidget {
   }
 
   // Method untuk menghitung total menggunakan fold()
-  // String _calculateTotal(List<Expense> expenses) {
-  //   double total = expenses.fold(0, (sum, expense) => sum + expense.amount);
-  //   return 'Rp ${total.toStringAsFixed(0)}';
-  // }
+  String _calculateTotal(List<Expense> expenses) {
+    double total = expenses.fold(0, (sum, expense) => sum + expense.amount);
+    return 'Rp ${total.toStringAsFixed(0)}';
+  }
 
   // Method untuk mendapatkan warna berdasarkan kategori
   Color _getCategoryColor(String category) {

@@ -1,7 +1,17 @@
+// main.dart
+
 import 'package:flutter/material.dart';
 import 'screens/auth/login_screen.dart';
+import 'service/expense_service.dart';
 
-void main() {
+void main() async {
+  // Pastikan binding Flutter sudah diinisialisasi
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Memuat data awal dari penyimpanan in-memory
+  // Ini harus dipanggil sebelum runApp()
+  await ExpenseService().loadInitialData();
+
   runApp(const MyApp());
 }
 
@@ -10,12 +20,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Aplikasi Pengeluaran',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const LoginScreen(), // Halaman pertama
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: LoginScreen(),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/expense.dart';
-import '../../managers/expense_manager.dart';
-import '../../managers/category_manager.dart';
+import '../../models/category.dart';
+import '../../service/expense_service.dart';
 
 class EditExpenseScreen extends StatefulWidget {
   final Expense expense;
@@ -55,19 +55,18 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
 
   void _saveExpense() {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        final index = ExpenseManager.expenses.indexWhere((e) => e.id == widget.expense.id);
-        if (index != -1) {
-          ExpenseManager.expenses[index] = Expense(
-            id: widget.expense.id,
-            title: _titleController.text,
-            amount: double.parse(_amountController.text),
-            category: _selectedCategory!,
-            date: _selectedDate,
-            description: _descriptionController.text,
-          );
-        }
-      });
+      final updatedExpense = Expense(
+        id: widget.expense.id,
+        title: _titleController.text,
+        amount: double.parse(_amountController.text),
+        category: _selectedCategory!,
+        date: _selectedDate,
+        description: _descriptionController.text,
+      );
+
+      // Panggil ExpenseService untuk memperbarui data
+      ExpenseService().updateExpense(updatedExpense);
+      
       Navigator.pop(context);
     }
   }
@@ -102,6 +101,9 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Ambil daftar kategori dari ExpenseService
+    final categories = ExpenseService().categories;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
@@ -147,8 +149,8 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
-                items: CategoryManager.categories
-                    .map((category) => DropdownMenuItem(
+                items: categories
+                    .map((category) => DropdownMenuItem<String>( // Perbaikan di sini
                           value: category.name,
                           child: Text(category.name),
                         ))

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../managers/category_manager.dart';
 import '../../models/category.dart';
+import '../../service/expense_service.dart';
+// import '../../managers/category_manager.dart'; // Hapus impor ini
 
 class CategoryScreen extends StatefulWidget {
   const CategoryScreen({super.key});
@@ -14,34 +15,35 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
   void _addCategory() {
     if (_controller.text.isEmpty) {
-      // Tampilkan notifikasi jika input kosong
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Nama kategori tidak boleh kosong')),
       );
       return;
     }
 
-    final newCategory = Category(
-      id: DateTime.now().millisecondsSinceEpoch.toString(), // id unik
-      name: _controller.text,
+    // Memanggil ExpenseService untuk menambah kategori
+    ExpenseService().addCategory(
+      Category(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: _controller.text,
+      ),
     );
-
-    setState(() {
-      CategoryManager.addCategory(newCategory);
-    });
-
     _controller.clear();
+    // setState() diperlukan untuk memperbarui UI
+    setState(() {}); 
   }
 
   void _removeCategory(String id) {
-    setState(() {
-      CategoryManager.removeCategory(id);
-    });
+    // Memanggil ExpenseService untuk menghapus kategori
+    ExpenseService().deleteCategory(id);
+    // setState() diperlukan untuk memperbarui UI
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final categories = CategoryManager.categories;
+    // Ambil daftar kategori dari ExpenseService
+    final categories = ExpenseService().categories;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -56,7 +58,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
       ),
       body: Column(
         children: [
-          // Input tambah kategori dalam wadah seperti kartu
           Container(
             margin: const EdgeInsets.all(20),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -78,7 +79,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                     controller: _controller,
                     decoration: const InputDecoration(
                       hintText: 'Nama kategori baru',
-                      border: InputBorder.none, // Hilangkan border
+                      border: InputBorder.none,
                     ),
                   ),
                 ),
@@ -89,7 +90,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
               ],
             ),
           ),
-          // List kategori
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20),
