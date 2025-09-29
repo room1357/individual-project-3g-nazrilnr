@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/expense.dart';
-import '../../models/category.dart';
 import '../../service/expense_service.dart';
 import 'add_expense_screen.dart';
 import 'edit_expense_screen.dart';
