@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
-import 'profile_screen.dart';
-import 'pesan_screen.dart';
-import 'pengaturan_screen.dart';
-import 'advenced_expense_list_screen.dart';
-import 'category_screen.dart';
+import 'auth/login_screen.dart';
+import 'profile/profile_screen.dart';
+import 'message/pesan_screen.dart';
+import 'setting/pengaturan_screen.dart';
+import 'advenced_expense/advenced_expense_list_screen.dart';
+import 'category/category_screen.dart';
+import 'expense_list_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,14 +13,19 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('Beranda'),
-        backgroundColor: Colors.blue,
+        title: const Text(
+          'Beranda',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: Colors.blue,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Colors.red),
             onPressed: () {
-              // Logout dengan pushAndRemoveUntil
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -29,93 +35,119 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Dashboard',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-              ),
+            // Hero Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Selamat Datang 👋",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Pantau dan atur pengeluaranmu",
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                  ],
+                ),
+                // Avatar bisa ditekan menuju profil
+                InkWell(
+                  borderRadius: BorderRadius.circular(30),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: Colors.blue.shade100,
+                    backgroundImage: AssetImage("assets/images/profil.jpg"),
+                  ),
+                )
+              ],
             ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  _buildDashboardCard(
-                    title: 'Pengeluaran',
-                    icon: Icons.attach_money,
-                    color: Colors.green,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AdvancedExpenseListScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    title: 'Kategori',
-                    icon: Icons.category,
-                    color: Colors.teal,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CategoryScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    title: 'Profil',
-                    icon: Icons.person,
-                    color: Colors.blue,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProfileScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    title: 'Pesan',
-                    icon: Icons.message,
-                    color: Colors.orange,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PesanScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDashboardCard(
-                    title: 'Pengaturan',
-                    icon: Icons.settings,
-                    color: Colors.purple,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PengaturanScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+
+            const SizedBox(height: 25),
+
+            // Dashboard Menu (tanpa Profil lagi)
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                _buildMenuCard(
+                  context,
+                  title: "Pengeluaran",
+                  icon: Icons.attach_money,
+                  colors: [Colors.green.shade400, Colors.green.shade200],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ExpenseListScreen()),
+                    );
+                  },
+                ),
+                _buildMenuCard(
+                  context,
+                  title: "Pengeluaran Advanced",
+                  icon: Icons.analytics,
+                  colors: [Colors.blue.shade400, Colors.blue.shade200],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AdvancedExpenseListScreen()),
+                    );
+                  },
+                ),
+                _buildMenuCard(
+                  context,
+                  title: "Kategori",
+                  icon: Icons.category,
+                  colors: [Colors.teal.shade400, Colors.teal.shade200],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CategoryScreen()),
+                    );
+                  },
+                ),
+                _buildMenuCard(
+                  context,
+                  title: "Pesan",
+                  icon: Icons.message,
+                  colors: [Colors.orange.shade400, Colors.orange.shade200],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PesanScreen()),
+                    );
+                  },
+                ),
+                _buildMenuCard(
+                  context,
+                  title: "Pengaturan",
+                  icon: Icons.settings,
+                  colors: [Colors.purple.shade400, Colors.purple.shade200],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PengaturanScreen()),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -123,36 +155,49 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDashboardCard({
+  Widget _buildMenuCard(
+    BuildContext context, {
     required String title,
     required IconData icon,
-    required Color color,
+    required List<Color> colors,
     required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: 5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 48, color: color),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-            ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: MediaQuery.of(context).size.width / 2 - 30, // biar 2 kolom
+        height: 140,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: colors.first.withOpacity(0.4),
+              blurRadius: 10,
+              offset: const Offset(2, 6),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 50, color: Colors.white),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            )
+          ],
         ),
       ),
     );

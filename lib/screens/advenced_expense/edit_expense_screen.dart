@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/expense.dart';
-import '../managers/expense_manager.dart';
-import '../managers/category_manager.dart';
+import '../../models/expense.dart';
+import '../../managers/expense_manager.dart';
+import '../../managers/category_manager.dart';
 
 class EditExpenseScreen extends StatefulWidget {
   final Expense expense;
@@ -19,16 +19,14 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   late TextEditingController _amountController;
   late TextEditingController _descriptionController;
   String? _selectedCategory;
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.expense.title);
-    _amountController =
-        TextEditingController(text: widget.expense.amount.toString());
-    _descriptionController =
-        TextEditingController(text: widget.expense.description);
+    _amountController = TextEditingController(text: widget.expense.amount.toString());
+    _descriptionController = TextEditingController(text: widget.expense.description);
     _selectedCategory = widget.expense.category;
     _selectedDate = widget.expense.date;
   }
@@ -58,9 +56,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
   void _saveExpense() {
     if (_formKey.currentState!.validate()) {
       setState(() {
-        // Update expense data
-        final index = ExpenseManager.expenses
-            .indexWhere((e) => e.id == widget.expense.id);
+        final index = ExpenseManager.expenses.indexWhere((e) => e.id == widget.expense.id);
         if (index != -1) {
           ExpenseManager.expenses[index] = Expense(
             id: widget.expense.id,
@@ -72,27 +68,60 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
           );
         }
       });
-
-      Navigator.pop(context); // kembali ke screen sebelumnya
+      Navigator.pop(context);
     }
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.blue, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.white, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('Edit Pengeluaran'),
-        backgroundColor: Colors.blue,
+        title: const Text(
+          'Edit Pengeluaran',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: Colors.blue,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Judul'),
+                decoration: _inputDecoration('Judul'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Judul tidak boleh kosong';
@@ -103,9 +132,8 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Jumlah'),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: _inputDecoration('Jumlah'),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Jumlah tidak boleh kosong';
@@ -130,7 +158,7 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                     _selectedCategory = value;
                   });
                 },
-                decoration: const InputDecoration(labelText: 'Kategori'),
+                decoration: _inputDecoration('Kategori'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Pilih kategori';
@@ -139,30 +167,54 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText:
-                      'Tanggal: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed: () => _selectDate(context),
+              InkWell(
+                onTap: () => _selectDate(context),
+                borderRadius: BorderRadius.circular(15),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: Colors.grey.shade300,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Tanggal: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const Icon(Icons.calendar_today, color: Colors.blue),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Deskripsi'),
+                decoration: _inputDecoration('Deskripsi'),
                 maxLines: 3,
               ),
               const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _saveExpense,
-                child: const Text('Simpan'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _saveExpense,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    elevation: 5,
+                  ),
+                  child: const Text(
+                    'Simpan',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
