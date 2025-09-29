@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pemrograman_mobile/screens/statictic/statistic_screen.dart';
 import 'auth/login_screen.dart';
 import 'profile/profile_screen.dart';
 import 'message/pesan_screen.dart';
@@ -102,12 +103,24 @@ class HomeScreen extends StatelessWidget {
                 _buildMenuCard(
                   context,
                   title: "Pengeluaran Advanced",
-                  icon: Icons.analytics,
+                  icon: Icons.payment,
                   colors: [Colors.blue.shade400, Colors.blue.shade200],
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const AdvancedExpenseListScreen()),
+                    );
+                  },
+                ),
+                _buildMenuCard(
+                  context,
+                  title: "Statistik",
+                  icon: Icons.analytics,
+                  colors: [Colors.teal.shade400, Colors.teal.shade200],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const StatisticsScreen()),
                     );
                   },
                 ),
