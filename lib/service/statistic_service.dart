@@ -28,4 +28,23 @@ class StatisticsService {
     }
     return map;
   }
+
+  Map<String, double> getTotalPerCategoryForMonth(int month) {
+    final expenses = _expenseService.expenses;
+    final totalPerCategory = <String, double>{};
+    
+    // Filter pengeluaran hanya untuk bulan yang diminta
+    // Kami juga sebaiknya memfilter berdasarkan tahun saat ini, tapi untuk
+    // menyederhanakan, kita filter hanya berdasarkan nomor bulan saja.
+    final expensesInMonth = expenses.where((e) => e.date.month == month).toList();
+
+    for (var expense in expensesInMonth) {
+        totalPerCategory.update(
+            expense.category,
+            (existingValue) => existingValue + expense.amount,
+            ifAbsent: () => expense.amount,
+        );
+    }
+    return totalPerCategory;
+  }
 }
