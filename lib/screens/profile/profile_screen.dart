@@ -1,20 +1,44 @@
 import 'package:flutter/material.dart';
+import '../../../service/auth_service.dart'; // Import AuthService
+import 'edit_profile_screen.dart'; // Import layar Edit
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // Gunakan instance AuthService
+  final AuthService _authService = AuthService();
+
+  // Metode untuk memicu rebuild setelah kembali dari layar edit
+  void _refreshProfile() {
+    setState(() {
+      // Hanya memanggil setState untuk me-rebuild widget dengan data terbaru dari AuthService
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final user = _authService.currentUser;
+
+    // Menangani kasus jika user belum login (seharusnya tidak terjadi jika navigasi benar)
+    if (user == null) {
+      return const Center(child: Text("Terjadi kesalahan. Silakan login ulang."));
+    }
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade100, // Latar belakang abu-abu muda
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
         title: const Text(
-          "Profil",
+          "Profil Saya",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white, // AppBar putih
+        backgroundColor: Colors.white,
         elevation: 0,
-        foregroundColor: Colors.blue, // Ikon dan teks biru
+        foregroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -22,11 +46,21 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Foto profil
-              CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.blue.shade100,
-                backgroundImage: const AssetImage("assets/images/profil.jpg"),
+              // Foto profil (dengan InkWell untuk edit/navigasi)
+              InkWell(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                  );
+                  // Panggil refresh setelah kembali dari EditScreen
+                  _refreshProfile();
+                },
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundColor: Colors.blue.shade100,
+                  backgroundImage: const AssetImage("assets/images/profil.jpg"),
+                ),
               ),
               const SizedBox(height: 25),
 
@@ -48,104 +82,51 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nama
-                    const Text(
-                      "Nama Lengkap",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      "Muhammad Nazril Nur Rahman",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
+                    // NAMA
+                    _buildProfileDetail(
+                        label: "Nama Lengkap",
+                        value: user.name,
+                        isBold: true),
                     const Divider(height: 30),
 
-                    // Tanggal Lahir
-                    const Text(
-                      "Tanggal Lahir",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "15 September 2005",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[800],
-                      ),
-                    ),
+                    // TANGGAL LAHIR
+                    _buildProfileDetail(
+                        label: "Tanggal Lahir",
+                        value: user.dateOfBirth?.toIso8601String().split('T')[0] ?? 'Belum diatur'),
                     const Divider(height: 30),
 
-                    // Jenis Kelamin
-                    const Text(
-                      "Jenis Kelamin",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Laki-laki",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[800],
-                      ),
-                    ),
+                    // JENIS KELAMIN
+                    _buildProfileDetail(
+                        label: "Jenis Kelamin",
+                        value: user.gender ?? 'Belum diatur'),
                     const Divider(height: 30),
 
-                    // Email
-                    const Text(
-                      "Email",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "mnazrilnurrahman@gmail.com",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[800],
-                      ),
-                    ),
+                    // EMAIL
+                    _buildProfileDetail(
+                        label: "Email",
+                        value: user.email),
                     const Divider(height: 30),
 
-                    // Asal
-                    const Text(
-                      "Asal",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w500,
+                    // ASAL
+                    _buildProfileDetail(
+                        label: "Asal",
+                        value: user.origin ?? 'Belum diatur'),
+                        
+                    const SizedBox(height: 10),
+                    // Tombol Edit di bagian bawah kartu
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                          );
+                          _refreshProfile();
+                        },
+                        icon: const Icon(Icons.edit, size: 18),
+                        label: const Text("Edit Profil", style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Malang, Indonesia",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[800],
-                      ),
-                    ),
+                    )
                   ],
                 ),
               ),
@@ -153,6 +134,32 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  // Helper Widget untuk membuat baris detail profil
+  Widget _buildProfileDetail({required String label, required String value, bool isBold = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.blue,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+            color: isBold ? Colors.black87 : Colors.grey[800],
+          ),
+        ),
+      ],
     );
   }
 }

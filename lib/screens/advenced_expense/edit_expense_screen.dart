@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/expense.dart';
 import '../../service/expense_service.dart';
-
+import '../../../service/auth_service.dart'; 
 class EditExpenseScreen extends StatefulWidget {
   final Expense expense;
 
@@ -54,6 +54,9 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
 
   void _saveExpense() {
     if (_formKey.currentState!.validate()) {
+      // Pastikan Anda mendapatkan ID pengguna saat ini
+      final currentUserId = AuthService().currentUser!.uid;
+
       final updatedExpense = Expense(
         id: widget.expense.id,
         title: _titleController.text,
@@ -61,11 +64,14 @@ class _EditExpenseScreenState extends State<EditExpenseScreen> {
         category: _selectedCategory!,
         date: _selectedDate,
         description: _descriptionController.text,
+        
+        // FIX: Tambahkan ownerId dan participantIds
+        // Kita asumsikan owner dan participant list tetap sama saat edit
+        ownerId: widget.expense.ownerId, 
+        participantIds: widget.expense.participantIds, 
       );
 
-      // Panggil ExpenseService untuk memperbarui data
       ExpenseService().updateExpense(updatedExpense);
-      
       Navigator.pop(context);
     }
   }

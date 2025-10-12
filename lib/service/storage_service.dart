@@ -2,8 +2,6 @@ import 'dart:async';
 import '../models/expense.dart';
 import '../models/category.dart';
 
-/// Abstraksi untuk layanan penyimpanan data.
-/// Metode menggunakan Future untuk meniru operasi I/O asinkron.
 abstract class StorageService {
   Future<List<Expense>> loadExpenses();
   Future<void> saveExpenses(List<Expense> items);
@@ -13,10 +11,12 @@ abstract class StorageService {
 }
 
 /// Implementasi penyimpanan sementara (in-memory).
-/// Data akan hilang saat aplikasi di-restart.
 class InMemoryStorageService implements StorageService {
   List<Expense> _expenses = [];
   List<Category> _categories = [];
+
+  // Definisikan ID Admin/Dummy untuk penanda kepemilikan (sesuai AuthService)
+  static const String _dummyAdminId = 'admin_1';
 
   @override
   Future<List<Expense>> loadExpenses() async {
@@ -30,6 +30,8 @@ class InMemoryStorageService implements StorageService {
           category: 'Makanan',
           date: DateTime(2024, 9, 15),
           description: 'Supermarket',
+          ownerId: _dummyAdminId,             // FIX: Tambahkan ownerId
+          participantIds: [_dummyAdminId],    // FIX: Tambahkan participantIds
         ),
         Expense(
           id: '2',
@@ -38,6 +40,8 @@ class InMemoryStorageService implements StorageService {
           category: 'Transportasi',
           date: DateTime(2024, 9, 14),
           description: 'Pertalite',
+          ownerId: _dummyAdminId,
+          participantIds: [_dummyAdminId],
         ),
         Expense(
           id: '3',
@@ -46,6 +50,8 @@ class InMemoryStorageService implements StorageService {
           category: 'Makanan',
           date: DateTime(2024, 9, 14),
           description: 'Ngopi',
+          ownerId: _dummyAdminId,
+          participantIds: [_dummyAdminId],
         ),
         Expense(
           id: '4',
@@ -54,6 +60,8 @@ class InMemoryStorageService implements StorageService {
           category: 'Utilitas',
           date: DateTime(2024, 9, 13),
           description: 'Bulanan',
+          ownerId: _dummyAdminId,
+          participantIds: [_dummyAdminId],
         ),
         Expense(
           id: '5',
@@ -62,6 +70,8 @@ class InMemoryStorageService implements StorageService {
           category: 'Hiburan',
           date: DateTime(2024, 9, 12),
           description: 'Nonton film weekend bersama keluarga',
+          ownerId: _dummyAdminId,
+          participantIds: [_dummyAdminId],
         ),
         Expense(
           id: '6',
@@ -70,6 +80,8 @@ class InMemoryStorageService implements StorageService {
           category: 'Pendidikan',
           date: DateTime(2024, 9, 11),
           description: 'Buku pemrograman untuk belajar',
+          ownerId: _dummyAdminId,
+          participantIds: [_dummyAdminId],
         ),
         Expense(
           id: '7',
@@ -78,6 +90,8 @@ class InMemoryStorageService implements StorageService {
           category: 'Makanan',
           date: DateTime(2024, 9, 11),
           description: 'Makan siang di restoran',
+          ownerId: _dummyAdminId,
+          participantIds: [_dummyAdminId],
         ),
         Expense(
           id: '8',
@@ -86,6 +100,8 @@ class InMemoryStorageService implements StorageService {
           category: 'Transportasi',
           date: DateTime(2024, 9, 10),
           description: 'Ongkos perjalanan harian ke kampus',
+          ownerId: _dummyAdminId,
+          participantIds: [_dummyAdminId],
         ),
       ];
     }

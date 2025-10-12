@@ -5,6 +5,8 @@ class Expense {
   final String category;
   final DateTime date;
   final String description;
+  final String ownerId;
+  final List<String> participantIds;
 
   Expense({
     required this.id,
@@ -13,6 +15,8 @@ class Expense {
     required this.category,
     required this.date,
     required this.description,
+    required this.ownerId,
+    required this.participantIds
   });
 
   // Getter untuk format tampilan mata uang

@@ -3,6 +3,7 @@ import '../../models/expense.dart';
 import '../../models/category.dart';
 import 'package:uuid/uuid.dart';
 import '../../service/expense_service.dart'; // Import service untuk manajemen data
+import '../../service/auth_service.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -52,22 +53,25 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   // Metode untuk menyimpan pengeluaran baru setelah validasi
-  void _saveExpense() {
-    // Memastikan semua field formulir valid
+ void _saveExpense() {
     if (_formKey.currentState!.validate()) {
-      // Membuat objek Expense baru dari input pengguna
+      // Dapatkan ID pengguna yang sedang login
+      final currentUserId = AuthService().currentUser!.uid; 
+      
       final newExpense = Expense(
-        id: const Uuid().v4(), // Menggunakan Uuid untuk ID unik
+        id: 'temp_id', 
         title: _titleController.text,
-        amount: double.parse(_amountController.text), // Mengonversi string ke double
+        amount: double.parse(_amountController.text),
         category: _selectedCategory!.name,
         date: _selectedDate,
         description: _descriptionController.text,
+        
+        // BARU: Tambahkan tagging kepemilikan dan daftar partisipasi (default: sendiri)
+        ownerId: currentUserId,
+        participantIds: [currentUserId], 
       );
 
-      // Memanggil ExpenseService untuk menyimpan pengeluaran
       ExpenseService().addExpense(newExpense);
-      // Kembali ke layar sebelumnya
       Navigator.pop(context);
     }
   }
