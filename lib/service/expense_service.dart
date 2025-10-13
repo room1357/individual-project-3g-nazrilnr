@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' hide Category;
 import '../models/expense.dart';
 import '../models/category.dart';
 import 'storage_service.dart';
-import 'auth_service.dart'; // Import service autentikasi
+import 'auth_service.dart';
 
 class ExpenseService extends ChangeNotifier {
   static final ExpenseService _instance = ExpenseService._internal();
@@ -10,36 +10,64 @@ class ExpenseService extends ChangeNotifier {
   ExpenseService._internal();
 
   final StorageService _storageService = InMemoryStorageService();
-  // Dapatkan instance AuthService untuk mengecek user yang sedang login
   final AuthService _authService = AuthService(); 
+  
+  // ID Admin yang Anda definisikan di AuthService
+  static const String _ADMIN_ID = 'admin_1'; 
 
+  // Master list untuk menyimpan SEMUA kategori (dari semua pengguna)
   List<Expense> _expenses = [];
-  List<Category> _categories = [];
+  List<Category> _allCategories = []; // FIX: Ganti _categories menjadi _allCategories
 
-  // INI ADALAH PERBAIKAN KRUSIAL UNTUK ISOLASI DATA
+  // Getter expenses tetap benar (sudah memfilter berdasarkan ownerId/participantIds)
   List<Expense> get expenses {
     final currentUserId = _authService.currentUser?.uid;
-    if (currentUserId == null) return []; // Jika tidak ada user, kembalikan kosong
+    if (currentUserId == null) return [];
 
-    // Filter: Tampilkan pengeluaran yang dimiliki user ATAU yang melibatkan user
     return List.unmodifiable(_expenses.where((e) {
-        // Cek data yang baru diisi memiliki tag kepemilikan dan partisipan
         if (e.ownerId == null || e.participantIds == null) {
-            // Abaikan data yang tidak memiliki tag (atau data lama yang tidak lengkap)
             return false; 
         }
-        
-        // Tampilkan hanya jika user adalah owner ATAU user ada di daftar partisipan
         return e.ownerId == currentUserId || e.participantIds.contains(currentUserId);
     }).toList());
   }
 
-  List<Category> get categories => List.unmodifiable(_categories);
+  // FIX KRUSIAL: Getter categories memfilter master list berdasarkan user ID
+  List<Category> get categories {
+    final currentUserId = _authService.currentUser?.uid;
+    if (currentUserId == null) return [];
 
-  // Metode untuk memuat data awal dari penyimpanan
+    // Filter master list categories
+    return List.unmodifiable(_allCategories.where((c) => c.userId == currentUserId).toList());
+  }
+
+  // Helper: Kategori Default (untuk di-seed ke Admin)
+  List<Category> _createDefaultCategoriesForAdmin(String userId) {
+      return [
+        Category(id: 'c1', name: 'Makanan', userId: userId),
+        Category(id: 'c2', name: 'Transportasi', userId: userId),
+        Category(id: 'c3', name: 'Utilitas', userId: userId),
+        Category(id: 'c4', name: 'Hiburan', userId: userId),
+        Category(id: 'c5', name: 'Pendidikan', userId: userId),
+      ];
+  }
+
+  // --- PERBAIKAN DI loadInitialData ---
   Future<void> loadInitialData() async {
+    final currentUserId = _authService.currentUser?.uid;
+
     _expenses = await _storageService.loadExpenses();
-    _categories = await _storageService.loadCategories();
+    // Memuat SEMUA kategori yang tersimpan
+    _allCategories = await _storageService.loadCategories(); 
+    
+    // Logika Kategori Default: Hanya buat jika list kosong DAN yang login adalah admin
+    if (_allCategories.isEmpty) {
+      if (currentUserId == _ADMIN_ID) {
+         _allCategories = _createDefaultCategoriesForAdmin(_ADMIN_ID);
+         _storageService.saveCategories(_allCategories);
+      }
+    }
+    
     notifyListeners();
   }
 
@@ -47,7 +75,6 @@ class ExpenseService extends ChangeNotifier {
   void addExpense(Expense e) {
     final nextId = (_expenses.length + 1).toString();
     
-    // Buat objek final Expense dengan ID sequential dan tagging kepemilikan
     final finalExpense = Expense(
       id: nextId, 
       title: e.title,
@@ -56,7 +83,6 @@ class ExpenseService extends ChangeNotifier {
       date: e.date,
       description: e.description,
       
-      // PASTIKAN FIELD BARU DISIMPAN
       ownerId: e.ownerId, 
       participantIds: e.participantIds,
     );
@@ -83,14 +109,16 @@ class ExpenseService extends ChangeNotifier {
 
   // --- Category Management ---
   void addCategory(Category newCategory) {
-    _categories.add(newCategory);
-    _storageService.saveCategories(_categories);
+    // FIX: Tambahkan ke master list
+    _allCategories.add(newCategory);
+    _storageService.saveCategories(_allCategories);
     notifyListeners();
   }
 
   void deleteCategory(String id) {
-    _categories.removeWhere((x) => x.id == id);
-    _storageService.saveCategories(_categories);
+    // FIX: Hapus dari master list
+    _allCategories.removeWhere((x) => x.id == id);
+    _storageService.saveCategories(_allCategories);
     notifyListeners();
   }
 }

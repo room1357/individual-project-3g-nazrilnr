@@ -30,8 +30,8 @@ class InMemoryStorageService implements StorageService {
           category: 'Makanan',
           date: DateTime(2024, 9, 15),
           description: 'Supermarket',
-          ownerId: _dummyAdminId,             // FIX: Tambahkan ownerId
-          participantIds: [_dummyAdminId],    // FIX: Tambahkan participantIds
+          ownerId: _dummyAdminId,
+          participantIds: [_dummyAdminId],
         ),
         Expense(
           id: '2',
@@ -115,16 +115,6 @@ class InMemoryStorageService implements StorageService {
 
   @override
   Future<List<Category>> loadCategories() async {
-    // Memuat data dummy jika daftar kosong
-    if (_categories.isEmpty) {
-      _categories = [
-        Category(id: 'c1', name: 'Makanan'),
-        Category(id: 'c2', name: 'Transportasi'),
-        Category(id: 'c3', name: 'Utilitas'),
-        Category(id: 'c4', name: 'Hiburan'),
-        Category(id: 'c5', name: 'Pendidikan'),
-      ];
-    }
     return Future.value(List.of(_categories));
   }
 
