@@ -90,29 +90,29 @@ class _ExportScreenState extends State<ExportScreen> {
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  // Tombol Ekspor CSV
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      // Menonaktifkan tombol saat sedang mengekspor
-                      onPressed: _isExporting ? null : () => _exportData(_exportService.exportToCsv),
-                      icon: const Icon(Icons.download),
-                      label: Text(
-                        _isExporting && _message.contains('CSV') ? 'Mengekspor CSV...' : 'Ekspor ke CSV', 
-                        style: const TextStyle(fontSize: 16)
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal.shade400,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        elevation: 4,
-                      ),
-                    ),
-                  ),
+                  // const SizedBox(height: 20),
+                  // // Tombol Ekspor CSV
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   child: ElevatedButton.icon(
+                  //     // Menonaktifkan tombol saat sedang mengekspor
+                  //     onPressed: _isExporting ? null : () => _exportData(_exportService.exportToCsv),
+                  //     icon: const Icon(Icons.download),
+                  //     label: Text(
+                  //       _isExporting && _message.contains('CSV') ? 'Mengekspor CSV...' : 'Ekspor ke CSV', 
+                  //       style: const TextStyle(fontSize: 16)
+                  //     ),
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: Colors.teal.shade400,
+                  //       foregroundColor: Colors.white,
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius: BorderRadius.circular(15),
+                  //       ),
+                  //       padding: const EdgeInsets.symmetric(vertical: 15),
+                  //       elevation: 4,
+                  //     ),
+                  //   ),
+                  // ),
                   const SizedBox(height: 16),
                   // Tombol Ekspor PDF
                   SizedBox(

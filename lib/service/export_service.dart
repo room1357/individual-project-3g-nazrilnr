@@ -5,16 +5,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:path_provider/path_provider.dart';
-
-// Import ini hanya akan digunakan di Web. 
-// Kami akan mengasumsikan Anda memiliki cara untuk mengatasi impor kondisional
-// atau menjalankan di lingkungan yang mendukung ini.
-// NOTE: Jika Anda mengalami error 'dart:html' di Mobile, Anda harus
-// memindahkannya ke file terpisah (*platform-specific shim*)
-// atau tambahkan 'package:universal_html' jika Anda menginstal package tersebut.
-// Untuk saat ini, kita akan fokus pada logika inti.
 import 'dart:typed_data'; 
-import 'dart:html' as html; 
+//import 'dart:html' as html; 
 
 import 'expense_service.dart';
 import '../models/expense.dart';
@@ -28,66 +20,63 @@ class ExportService {
     return _expenseService.expenses.fold(0.0, (s, e) => s + e.amount);
   }
 
-  // --- Metode Export CSV (dengan Logika Web) ---
-  Future<String> exportToCsv() async {
-    final expenses = _expenseService.expenses;
-    if (expenses.isEmpty) {
-      return "Tidak ada data pengeluaran untuk diekspor.";
-    }
+  // // --- Metode Export CSV (dengan Logika Web) ---
+  // Future<String> exportToCsv() async {
+  //   final expenses = _expenseService.expenses;
+  //   if (expenses.isEmpty) {
+  //     return "Tidak ada data pengeluaran untuk diekspor.";
+  //   }
 
-    // 1. Persiapan Data CSV
-    List<List<dynamic>> rows = [
-      ['ID', 'Judul', 'Jumlah', 'Kategori', 'Tanggal', 'Deskripsi']
-    ];
-    for (var expense in expenses) {
-      rows.add([
-        expense.id,
-        expense.title,
-        expense.amount,
-        expense.category,
-        expense.date.toIso8601String().split('T')[0], 
-        expense.description,
-      ]);
-    }
-    String csv = const ListToCsvConverter().convert(rows);
-    final filename = 'expenses_report_${DateTime.now().year}.csv';
+    // // 1. Persiapan Data CSV
+    // List<List<dynamic>> rows = [
+    //   ['ID', 'Judul', 'Jumlah', 'Kategori', 'Tanggal', 'Deskripsi']
+    // ];
+    // for (var expense in expenses) {
+    //   rows.add([
+    //     expense.id,
+    //     expense.title,
+    //     expense.amount,
+    //     expense.category,
+    //     expense.date.toIso8601String().split('T')[0], // Menggunakan format ISO standar
+    //     expense.description,
+    //   ]);
+    // }
+    // String csv = const ListToCsvConverter().convert(rows);
+    // final filename = 'expenses_report_${DateTime.now().year}.csv';
 
     // 2. LOGIKA KONDISIONAL UNTUK WEB
-    if (kIsWeb) {
-      // Mengonversi string CSV menjadi Blob dan memicu unduhan di browser
-      final bytes = Uint8List.fromList(csv.codeUnits);
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.document.createElement('a') as html.AnchorElement
-        ..href = url
-        ..style.display = 'none'
-        ..download = filename;
-      html.document.body!.children.add(anchor);
-      anchor.click();
-      html.document.body!.children.remove(anchor);
-      html.Url.revokeObjectUrl(url);
+    // if (kIsWeb) {
+    //   final bytes = Uint8List.fromList(csv.codeUnits);
+    //   final blob = html.Blob([bytes]);
+    //   final url = html.Url.createObjectUrlFromBlob(blob);
+    //   final anchor = html.document.createElement('a') as html.AnchorElement
+    //     ..href = url
+    //     ..style.display = 'none'
+    //     ..download = filename;
+    //   html.document.body!.children.add(anchor);
+    //   anchor.click();
+    //   html.document.body!.children.remove(anchor);
+    //   html.Url.revokeObjectUrl(url);
       
-      return "File CSV berhasil diunduh ke browser.";
-    } 
+    //   return "File CSV berhasil diunduh ke browser.";
+    // } 
     
-    // 3. LOGIKA MOBILE/DESKTOP (Fallback ke sistem file)
-    else {
-      // Menyimpan file ke direktori dokumen aplikasi
-      final directory = await getApplicationDocumentsDirectory(); 
-      final exportDirectory = Directory('${directory.path}/Exports');
+  //   // 3. LOGIKA MOBILE/DESKTOP (Fallback ke sistem file)
+  //   else {
+  //     final directory = await getApplicationDocumentsDirectory(); 
+  //     final exportDirectory = Directory('${directory.path}/Exports');
       
-      if (!await exportDirectory.exists()) {
-          await exportDirectory.create(recursive: true);
-      }
+  //     if (!await exportDirectory.exists()) {
+  //         await exportDirectory.create(recursive: true);
+  //     }
       
-      final path = '${exportDirectory.path}/$filename';
-      final file = File(path);
-      await file.writeAsString(csv);
+  //     final path = '${exportDirectory.path}/$filename';
+  //     final file = File(path);
+  //     await file.writeAsString(csv);
       
-      // Di Mobile, Anda bisa menggunakan share_plus di sini jika diinginkan.
-      return "Data berhasil diekspor dan disimpan di: $path";
-    }
-  }
+  //     return "Data berhasil diekspor dan disimpan di: $path";
+  //   }
+  // }
 
   // --- Metode Export PDF ---
   Future<String> exportToPdf() async {
@@ -98,11 +87,13 @@ class ExportService {
 
     final doc = pw.Document();
     
+    // Persiapan data untuk tabel PDF
     final List<List<String>> tableData = expenses.map((e) => [
       e.title,
       'Rp ${e.amount.toStringAsFixed(0)}',
       e.category,
-      e.formattedDate,
+      // FIX: Ganti e.formattedDate dengan format eksplisit
+      '${e.date.day}/${e.date.month}/${e.date.year}', 
       e.description,
     ]).toList();
     

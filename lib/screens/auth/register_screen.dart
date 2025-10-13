@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../route/AppRoutes.dart'; 
-import '../../service/auth_service.dart';
+import 'package:pemrograman_mobile/route/AppRoutes.dart';
+import 'package:pemrograman_mobile/service/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -38,7 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() { _isLoading = false; });
 
     if (errorMessage == null) {
-      // Registrasi Sukses: Navigasi ke Home
+      // Registrasi Sukses: Navigasi ke Home dan hapus semua rute sebelumnya
       Navigator.pushNamedAndRemoveUntil(
         context, 
         AppRoutes.home, 
@@ -61,7 +61,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         borderRadius: BorderRadius.circular(15),
         borderSide: BorderSide.none,
       ),
-      // ... (style lainnya untuk konsistensi)
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.blue, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.white, width: 2),
+      ),
     );
   }
 
@@ -87,11 +94,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const Text("Buat Akun Baru", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue)),
                 const SizedBox(height: 24),
 
-                // Field Nama
+                // Field Nama LENGKAP (Ini adalah field yang hilang)
                 TextFormField(
                   controller: _nameController,
                   decoration: _inputDecoration('Nama Lengkap'),
-                  validator: (value) => value!.isEmpty ? 'Nama harus diisi' : null, /////ganti return dulu 
+                  validator: (value) => value!.isEmpty ? 'Nama harus diisi' : null, // Validator diperbaiki
                 ),
                 const SizedBox(height: 16),
 
@@ -131,7 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 // Link ke Login
                 TextButton(
-                  onPressed: () => Navigator.pop(context), // Kembali ke Login
+                  onPressed: () => Navigator.pop(context),
                   child: const Text('Sudah punya akun? Masuk', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],

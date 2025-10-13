@@ -6,12 +6,15 @@ import 'screens/auth/register_screen.dart'; // Pastikan Anda mengimpor RegisterS
 import 'screens/home_screen.dart';        // Pastikan Anda mengimpor HomeScreen
 import 'service/expense_service.dart';
 import 'route/AppRoutes.dart'; 
+import 'service/auth_service.dart';
+
 
 void main() async {
   // Pastikan binding Flutter sudah diinisialisasi
   WidgetsFlutterBinding.ensureInitialized();
   
   // Memuat data awal dari penyimpanan in-memory
+  await AuthService().login('Bulkigus', 'bull');
   await ExpenseService().loadInitialData();
 
   runApp(const MyApp());

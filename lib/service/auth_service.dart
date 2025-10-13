@@ -5,7 +5,7 @@ class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal() {
-    // PANGGIL FUNGSI UNTUK MENGISI DATA DUMMY SAAT SERVICE DIBUAT
+    // Memanggil fungsi untuk mengisi data dummy saat service dibuat
     _seedInitialUser();
   }
 
@@ -13,31 +13,31 @@ class AuthService {
   final Map<String, User> _registeredUsers = {};
   final Map<String, String> _userPasswords = {};
 
-
   User? _currentUser;
   User? get currentUser => _currentUser;
 
-  // --- FUNGSI BARU: Mengisi Akun Dummy ---
+  // Mengisi Akun Dummy (Admin untuk tujuan pengujian)
   void _seedInitialUser() {
     const email = 'Bulkigus';
     const password = 'bull';
     
-    final dummyUser = User(
+    final dummyAdmin = User(
       uid: 'admin_1', 
       email: email, 
-      name: 'Testing User',
+      name: 'Admin Finance',
+      role: 'admin', // ROLE DITETAPKAN
       origin: 'Jakarta',
       gender: 'Laki-laki',
-      dateOfBirth: DateTime(15, 09, 2005),
+      dateOfBirth: DateTime(1990, 1, 1),
+      profileImageUrl: "assets/images/profil.jpg", // Admin memiliki foto default
     );
     
-    // Simpan akun dummy ke database
-    _registeredUsers[email] = dummyUser;
+    _registeredUsers[email] = dummyAdmin;
     _userPasswords[email] = password;
-    debugPrint('Akun Dummy Siap: $email / $password');
+    debugPrint('Akun Admin Siap: $email / $password');
   }
 
-  // Method untuk mendaftarkan user baru (Simulasi)
+  // Method untuk mendaftarkan user baru
   Future<String?> register(String name, String email, String password) async {
     await Future.delayed(const Duration(milliseconds: 500));
     
@@ -48,14 +48,15 @@ class AuthService {
     final newUser = User(
       uid: DateTime.now().millisecondsSinceEpoch.toString(), 
       email: email, 
-      name: name
+      name: name,
+      role: 'user', // ROLE Default sebagai 'user' biasa
+      profileImageUrl: null, // User baru dimulai dengan foto kosong
     );
     
     _registeredUsers[email] = newUser;
     _userPasswords[email] = password; 
     
     _currentUser = newUser;
-    debugPrint('User baru terdaftar: ${newUser.email}');
     return null; 
   }
 
@@ -69,7 +70,6 @@ class AuthService {
     
     if (_userPasswords[email] == password) {
       _currentUser = _registeredUsers[email];
-      debugPrint('Login Sukses: ${_currentUser!.email}');
       return null;
     } else {
       return 'Email atau password salah.';
@@ -82,7 +82,7 @@ class AuthService {
     await Future.delayed(const Duration(milliseconds: 500));
   }
   
-  // Method untuk memperbarui detail user yang sedang login (Simulasi)
+  // Method untuk memperbarui detail user
   Future<String?> updateProfile({
     required String name,
     required String origin,
@@ -102,6 +102,8 @@ class AuthService {
       origin: origin,
       gender: gender,
       dateOfBirth: dateOfBirth,
+      profileImageUrl: profileImageUrl,
+      role: _currentUser!.role, // Pertahankan role lama
     );
     
     _currentUser = updatedUser;

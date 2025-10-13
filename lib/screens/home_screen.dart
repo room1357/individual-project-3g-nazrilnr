@@ -89,18 +89,18 @@ class HomeScreen extends StatelessWidget {
               spacing: 16,
               runSpacing: 16,
               children: [
-                _buildMenuCard(
-                  context,
-                  title: "Pengeluaran",
-                  icon: Icons.attach_money,
-                  colors: [Colors.green.shade400, Colors.green.shade200],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ExpenseListScreen()),
-                    );
-                  },
-                ),
+                // _buildMenuCard(
+                //   context,
+                //   title: "Pengeluaran",
+                //   icon: Icons.attach_money,
+                //   colors: [Colors.green.shade400, Colors.green.shade200],
+                //   onTap: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(builder: (context) => const ExpenseListScreen()),
+                //     );
+                //   },
+                // ),
                 _buildMenuCard(
                   context,
                   title: "Pengeluaran Advanced",
