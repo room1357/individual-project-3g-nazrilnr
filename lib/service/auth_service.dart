@@ -24,11 +24,11 @@ class AuthService {
     final dummyAdmin = User(
       uid: 'admin_1', 
       email: email, 
-      name: 'Admin Finance',
+      name: 'Muhammad Nazril Nur Rahman',
       role: 'admin', // ROLE DITETAPKAN
-      origin: 'Jakarta',
+      origin: 'Malang',
       gender: 'Laki-laki',
-      dateOfBirth: DateTime(1990, 1, 1),
+      dateOfBirth: DateTime(2005, 9, 15),
       profileImageUrl: "assets/images/profil.jpg", // Admin memiliki foto default
     );
     
