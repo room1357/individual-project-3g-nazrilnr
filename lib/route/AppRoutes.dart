@@ -1,4 +1,7 @@
 class AppRoutes {
+  //ON BOARDING
+  static const String onboarding = '/onboarding'; 
+
   // --- AUTHENTICATION ---
   static const String login = '/login';
   static const String register = '/register'; // Route baru untuk Registrasi
