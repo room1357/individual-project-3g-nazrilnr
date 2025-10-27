@@ -8,6 +8,7 @@ import 'advenced_expense/advenced_expense_list_screen.dart';
 import 'category/category_screen.dart';
 import 'expense_list_screen.dart';
 import 'export/export_screen.dart';
+import 'apitest/api_post_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -170,6 +171,18 @@ class HomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const PengaturanScreen()),
+                    );
+                  },
+                ),
+                _buildMenuCard(
+                  context,
+                  title: "PostAPI",
+                  icon: Icons.settings,
+                  colors: [Colors.purple.shade400, Colors.purple.shade200],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ApiPostsScreen()),
                     );
                   },
                 ),
