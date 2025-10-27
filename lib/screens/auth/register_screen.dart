@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pemrograman_mobile/route/AppRoutes.dart';
 import 'package:pemrograman_mobile/service/auth_service.dart';
+import '../../service/expense_service.dart'; 
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -13,6 +14,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController(); // Controller untuk verifikasi
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
@@ -21,14 +23,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   void _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
     
+    // Periksa kecocokan password sebelum memanggil service
+    if (_passwordController.text != _confirmPasswordController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Registrasi Gagal: Password dan Konfirmasi tidak cocok.')),
+        );
+        return;
+    }
+
     setState(() { _isLoading = true; });
 
+    // Panggil AuthService untuk mendaftarkan user baru
     final errorMessage = await AuthService().register(
       _nameController.text,
       _emailController.text,
@@ -38,7 +50,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() { _isLoading = false; });
 
     if (errorMessage == null) {
-      // Registrasi Sukses: Navigasi ke Home dan hapus semua rute sebelumnya
+      // Muat data expense dan kategori user baru setelah register sukses
+      await ExpenseService().loadInitialData(); 
+
+      // Navigasi ke Home dan hapus semua rute sebelumnya
       Navigator.pushNamedAndRemoveUntil(
         context, 
         AppRoutes.home, 
@@ -94,15 +109,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const Text("Buat Akun Baru", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue)),
                 const SizedBox(height: 24),
 
-                // Field Nama LENGKAP (Ini adalah field yang hilang)
+                // 1. Field Nama LENGKAP
                 TextFormField(
                   controller: _nameController,
                   decoration: _inputDecoration('Nama Lengkap'),
-                  validator: (value) => value!.isEmpty ? 'Nama harus diisi' : null, // Validator diperbaiki
+                  validator: (value) => value!.isEmpty ? 'Nama harus diisi' : null, 
                 ),
                 const SizedBox(height: 16),
 
-                // Field Email
+                // 2. Field Email
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -111,12 +126,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Field Password
+                // 3. Field Password
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
                   decoration: _inputDecoration('Password'),
                   validator: (value) => value!.length < 6 ? 'Password minimal 6 karakter' : null,
+                ),
+                const SizedBox(height: 16), 
+
+                // 4. Field Konfirmasi Password
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  obscureText: true,
+                  decoration: _inputDecoration('Konfirmasi Password'),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Konfirmasi password harus diisi';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Password tidak cocok';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
 
