@@ -60,16 +60,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
     final categories = ExpenseService().categories;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        title: const Text(
-          'Daftar Kategori',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: Colors.blue,
-      ),
       body: Column(
         children: [
           // Input tambah kategori dalam wadah seperti kartu

@@ -1,17 +1,24 @@
+import 'package:flutter/foundation.dart';
 import '../models/expense.dart';
 import 'expense_service.dart';
 
-class StatisticsService {
+class StatisticsService extends ChangeNotifier {
   final ExpenseService _expenseService;
 
-  StatisticsService(this._expenseService);
-
-  // Getter untuk menghitung total semua pengeluaran
-  double get totalAll {
-    return _expenseService.expenses.fold(0.0, (s, e) => s + e.amount);
+  StatisticsService(this._expenseService) {
+    // Dengarkan perubahan dari ExpenseService
+    _expenseService.addListener(_onExpenseUpdated);
   }
 
-  // Getter untuk menghitung total pengeluaran per kategori
+  void _onExpenseUpdated() {
+    notifyListeners(); // Kasih tahu UI kalau ada data baru
+  }
+
+  // Total semua pengeluaran
+  double get totalAll =>
+      _expenseService.expenses.fold(0.0, (s, e) => s + e.amount);
+
+  // Total per kategori
   Map<String, double> get totalPerCategory {
     final map = <String, double>{};
     for (final e in _expenseService.expenses) {
@@ -20,7 +27,7 @@ class StatisticsService {
     return map;
   }
 
-  // Getter untuk menghitung total pengeluaran per bulan
+  // Total per bulan (bisa tambahkan tahun jika dibutuhkan)
   Map<int, double> get totalPerMonth {
     final map = <int, double>{};
     for (final e in _expenseService.expenses) {
@@ -29,22 +36,26 @@ class StatisticsService {
     return map;
   }
 
+  // Total per kategori untuk bulan tertentu
   Map<String, double> getTotalPerCategoryForMonth(int month) {
-    final expenses = _expenseService.expenses;
     final totalPerCategory = <String, double>{};
-    
-    // Filter pengeluaran hanya untuk bulan yang diminta
-    // Kami juga sebaiknya memfilter berdasarkan tahun saat ini, tapi untuk
-    // menyederhanakan, kita filter hanya berdasarkan nomor bulan saja.
-    final expensesInMonth = expenses.where((e) => e.date.month == month).toList();
+    final expensesInMonth = _expenseService.expenses
+        .where((e) => e.date.month == month)
+        .toList();
 
     for (var expense in expensesInMonth) {
-        totalPerCategory.update(
-            expense.category,
-            (existingValue) => existingValue + expense.amount,
-            ifAbsent: () => expense.amount,
-        );
+      totalPerCategory.update(
+        expense.category,
+        (value) => value + expense.amount,
+        ifAbsent: () => expense.amount,
+      );
     }
     return totalPerCategory;
+  }
+
+  @override
+  void dispose() {
+    _expenseService.removeListener(_onExpenseUpdated);
+    super.dispose();
   }
 }

@@ -1,6 +1,7 @@
 // main.dart
 
 import 'package:flutter/material.dart';
+import 'package:pemrograman_mobile/screens/mainscreen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/home_screen.dart';
@@ -37,7 +38,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.onboarding: (context) => const OnboardingScreen(),
         AppRoutes.login: (context) => const LoginScreen(),
         AppRoutes.register: (context) => const RegisterScreen(),
-        AppRoutes.home: (context) => const HomeScreen(),
+        AppRoutes.home: (context) => const MainScreen(),
         // Anda harus menambahkan rute lainnya di sini
       },
       // FIX KRUSIAL: Mulai dari Onboarding Screen
