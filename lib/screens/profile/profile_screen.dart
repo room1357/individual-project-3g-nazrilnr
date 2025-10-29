@@ -187,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const Text(
-            "Selamat datang di SakuRapi",
+            "Selamat datang di ExpenseBULL",
             style: TextStyle(fontSize: 16, color: Colors.white70),
           ),
         ],
