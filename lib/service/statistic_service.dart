@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import '../models/expense.dart';
 import 'expense_service.dart';
 
 class StatisticsService extends ChangeNotifier {

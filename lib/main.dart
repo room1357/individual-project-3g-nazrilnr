@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:pemrograman_mobile/screens/mainscreen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
-import 'screens/home_screen.dart';
 import 'service/expense_service.dart';
 import 'route/AppRoutes.dart'; 
 import 'service/auth_service.dart';
