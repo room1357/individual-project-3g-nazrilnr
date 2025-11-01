@@ -28,6 +28,13 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
   void initState() {
     super.initState();
     _dataFuture = _loadInitialData();
+
+    // --- Listener ExpenseService untuk auto rebuild ---
+    ExpenseService().addListener(_onExpenseServiceUpdated);
+  }
+
+  void _onExpenseServiceUpdated() {
+    if (mounted) setState(() {}); // rebuild ketika service notifyListeners
   }
 
   Future<void> _loadInitialData() async {
@@ -45,145 +52,132 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
   @override
   void dispose() {
     searchController.dispose();
+    ExpenseService().removeListener(_onExpenseServiceUpdated);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final expenses = ExpenseService().expenses;
+    final categories = ExpenseService().categories;
+
+    final bool hasActiveFilter =
+        searchController.text.isNotEmpty || selectedCategory != 'Semua';
+
+    final List<Expense> filteredExpenses = (hasActiveFilter)
+        ? expenses.where((expense) {
+            bool matchesSearch = searchController.text.isEmpty ||
+                expense.title.toLowerCase().contains(searchController.text.toLowerCase()) ||
+                expense.description.toLowerCase().contains(searchController.text.toLowerCase());
+            bool matchesCategory =
+                selectedCategory == 'Semua' || expense.category == selectedCategory;
+            return matchesSearch && matchesCategory;
+          }).toList()
+        : expenses; // tampilkan semua jika tidak difilter
+
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          // Navigasi ke halaman tambah pengeluaran
           await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
           );
-          // Refresh data setelah kembali
-          _loadInitialData();
+          // Tidak perlu _loadInitialData() manual karena listener sudah handle
         },
         icon: const Icon(Icons.add),
         label: const Text('Tambah'),
         backgroundColor: Colors.blueAccent,
       ),
-      body: FutureBuilder<void>(
-        future: _dataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text('Terjadi kesalahan saat memuat data.'));
-          }
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Kolom pencarian
+            TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                hintText: 'Cari pengeluaran...',
+                prefixIcon: const Icon(Icons.search, color: Colors.blue),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (value) => _triggerFilter(),
+            ),
+            const SizedBox(height: 16),
 
-          final expenses = ExpenseService().expenses;
-          final categories = ExpenseService().categories;
+            // Chip kategori
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [..._buildCategoryChips(categories)],
+              ),
+            ),
+            const SizedBox(height: 25),
 
-          final bool hasActiveFilter =
-              searchController.text.isNotEmpty || selectedCategory != 'Semua';
-
-          final List<Expense> filteredExpenses = (hasActiveFilter)
-              ? expenses.where((expense) {
-                  bool matchesSearch = searchController.text.isEmpty ||
-                      expense.title.toLowerCase().contains(searchController.text.toLowerCase()) ||
-                      expense.description.toLowerCase().contains(searchController.text.toLowerCase());
-                  bool matchesCategory =
-                      selectedCategory == 'Semua' || expense.category == selectedCategory;
-                  return matchesSearch && matchesCategory;
-                }).toList()
-              : expenses; // Perbaikan: tampilkan semua jika tidak difilter
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Kartu statistik
+            Row(
               children: [
-                // Kolom pencarian
-                TextField(
-                  controller: searchController,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white,
-                    hintText: 'Cari pengeluaran...',
-                    prefixIcon: const Icon(Icons.search, color: Colors.blue),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onChanged: (value) => _triggerFilter(),
-                ),
-                const SizedBox(height: 16),
-
-                // Chip kategori
-                SizedBox(
-                  height: 40,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [..._buildCategoryChips(categories)],
+                Expanded(
+                  child: _buildStatCard(
+                    label: 'Total',
+                    value: CurrencyUtils.formatCurrency(
+                        _calculateFilteredTotal(filteredExpenses)),
+                    colors: [Colors.green.shade400, Colors.green.shade200],
                   ),
                 ),
-                const SizedBox(height: 25),
-
-                // Kartu statistik
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        label: 'Total',
-                        value: CurrencyUtils.formatCurrency(
-                            _calculateFilteredTotal(filteredExpenses)),
-                        colors: [Colors.green.shade400, Colors.green.shade200],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildStatCard(
-                        label: 'Jumlah',
-                        value: '${filteredExpenses.length} item',
-                        colors: [Colors.blue.shade400, Colors.blue.shade200],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildStatCard(
-                        label: 'Rata-rata',
-                        value: CurrencyUtils.formatCurrency(
-                            _calculateAverage(filteredExpenses)),
-                        colors: [Colors.orange.shade400, Colors.orange.shade200],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 25),
-
-                // Judul daftar
-                const Text(
-                  "Daftar Pengeluaran",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildStatCard(
+                    label: 'Jumlah',
+                    value: '${filteredExpenses.length} item',
+                    colors: [Colors.blue.shade400, Colors.blue.shade200],
                   ),
                 ),
-                const SizedBox(height: 10),
-
-                if (filteredExpenses.isEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: Text('Belum ada pengeluaran.'),
-                    ),
-                  )
-                else
-                  ...filteredExpenses
-                      .map((expense) => _buildExpenseListItem(context, expense))
-                      .toList(),
-                const SizedBox(height: 80),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildStatCard(
+                    label: 'Rata-rata',
+                    value: CurrencyUtils.formatCurrency(
+                        _calculateAverage(filteredExpenses)),
+                    colors: [Colors.orange.shade400, Colors.orange.shade200],
+                  ),
+                ),
               ],
             ),
-          );
-        },
+            const SizedBox(height: 25),
+
+            // Judul daftar
+            const Text(
+              "Daftar Pengeluaran",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            if (filteredExpenses.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text('Belum ada pengeluaran.'),
+                ),
+              )
+            else
+              ...filteredExpenses
+                  .map((expense) => _buildExpenseListItem(context, expense))
+                  .toList(),
+            const SizedBox(height: 80),
+          ],
+        ),
       ),
     );
   }
@@ -391,22 +385,20 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
         ),
         actions: [
           if (isOwner)
-  TextButton.icon(
-    onPressed: () async {
-      await SharedService().loadExpenses();
-      Navigator.pop(context);
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SharedProcessScreen(expense: expense),
-        ),
-      );
-      _loadInitialData();
-    },
-    icon: const Icon(Icons.share, size: 18),
-    label: const Text('Share Data'),
-    style: TextButton.styleFrom(foregroundColor: Colors.teal),
-  ),
+            TextButton(
+              onPressed: () async {
+                await SharedService().loadExpenses();
+                Navigator.pop(context);
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SharedProcessScreen(expense: expense),
+                  ),
+                );
+                // Tidak perlu _loadInitialData(); listener handle otomatis
+              },
+              child: const Text('Share Data'),
+            ),
           if (isOwner)
             TextButton(
               onPressed: () async {
@@ -417,9 +409,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                       builder: (context) =>
                           EditExpenseScreen(expense: expense)),
                 );
-                _loadInitialData();
               },
-              style: TextButton.styleFrom(foregroundColor: Colors.blue),
               child: const Text('Edit'),
             ),
           if (isOwner)
@@ -440,7 +430,6 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                           ExpenseService().deleteExpense(expense.id);
                           Navigator.pop(context);
                           Navigator.pop(context);
-                          _loadInitialData();
                         },
                         child: const Text('Hapus',
                             style: TextStyle(color: Colors.red)),
@@ -449,8 +438,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                   ),
                 );
               },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Hapus'),
+              child: const Text('Hapus', style: TextStyle(color: Colors.red)),
             ),
         ],
       ),
