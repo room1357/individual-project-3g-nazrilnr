@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-// NOTE: Ganti path sesuai struktur folder Anda jika ini tidak berfungsi
 import 'home_screen.dart'; 
 import 'statictic/statistic_screen.dart';
 import 'advenced_expense/advenced_expense_list_screen.dart';
-import 'profile/profile_screen.dart';
 import 'category/category_screen.dart';
 import 'shared_expense/shared_screen.dart';
 

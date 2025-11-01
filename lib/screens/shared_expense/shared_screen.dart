@@ -78,19 +78,31 @@ class _SharedExpenseScreenState extends State<SharedExpenseScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Shared Expense'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Dibagikan'),
-              Tab(text: 'Diterima'),
-            ],
-          ),
-        ),
-        body: TabBarView(
+        appBar: null, // hilangkan AppBar sepenuhnya
+        body: Column(
           children: [
-            _buildList(sentExpenses),
-            _buildList(receivedExpenses),
+            SafeArea(
+              child: Container(
+                color: Colors.white, // background tab
+                child: const TabBar(
+                  labelColor: Colors.purple,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: Colors.purple,
+                  tabs: [
+                    Tab(text: 'Dibagikan'),
+                    Tab(text: 'Diterima'),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _buildList(sentExpenses),
+                  _buildList(receivedExpenses),
+                ],
+              ),
+            ),
           ],
         ),
       ),

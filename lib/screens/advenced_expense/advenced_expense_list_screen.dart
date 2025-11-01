@@ -29,12 +29,12 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
     super.initState();
     _dataFuture = _loadInitialData();
 
-    // --- Listener ExpenseService untuk auto rebuild ---
+    // Listener ExpenseService untuk auto rebuild
     ExpenseService().addListener(_onExpenseServiceUpdated);
   }
 
   void _onExpenseServiceUpdated() {
-    if (mounted) setState(() {}); // rebuild ketika service notifyListeners
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadInitialData() async {
@@ -73,7 +73,7 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                 selectedCategory == 'Semua' || expense.category == selectedCategory;
             return matchesSearch && matchesCategory;
           }).toList()
-        : expenses; // tampilkan semua jika tidak difilter
+        : expenses;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -83,7 +83,6 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
             context,
             MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
           );
-          // Tidak perlu _loadInitialData() manual karena listener sudah handle
         },
         icon: const Icon(Icons.add),
         label: const Text('Tambah'),
@@ -320,41 +319,67 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
           ],
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            CircleAvatar(
-              backgroundColor: _getCategoryColor(expense.category),
-              child:
-                  Icon(_getCategoryIcon(expense.category), color: Colors.white),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(expense.title,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 4),
-                    Row(children: [
+            // Icon + Title/Category Column
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: _getCategoryColor(expense.category),
+                  child: Icon(
+                    _getCategoryIcon(expense.category),
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        '${expense.category} • ${DateUtils.formatDate(expense.date)}',
-                        style: const TextStyle(color: Colors.black54),
+                        expense.title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      if (!isOwner)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 8.0),
-                          child: Icon(Icons.share,
-                              size: 16, color: Colors.blueAccent),
-                        ),
-                    ]),
-                  ]),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '${expense.category} • ${DateUtils.formatDate(expense.date)}',
+                              style: const TextStyle(color: Colors.black54),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (!isOwner)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 8.0),
+                              child: Icon(Icons.share,
+                                  size: 16, color: Colors.blueAccent),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            Text(
-              CurrencyUtils.formatCurrency(expense.amount),
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.red[600]),
+            // Amount
+            Flexible(
+              child: Text(
+                CurrencyUtils.formatCurrency(expense.amount),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.red[600]),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+              ),
             ),
           ],
         ),
@@ -370,7 +395,9 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(expense.title,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +422,6 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                     builder: (context) => SharedProcessScreen(expense: expense),
                   ),
                 );
-                // Tidak perlu _loadInitialData(); listener handle otomatis
               },
               child: const Text('Share Data'),
             ),
@@ -454,7 +480,9 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
                 fontWeight: FontWeight.bold, color: color, fontSize: 14)),
         Expanded(
           child: Text(value,
-              style: const TextStyle(color: Colors.black87, fontSize: 14)),
+              style: const TextStyle(color: Colors.black87, fontSize: 14),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis),
         ),
       ]),
     );

@@ -19,7 +19,7 @@ class OnboardingScreen extends StatelessWidget {
     // Daftar semua halaman onboarding
     final pages = [
       PageViewModel(
-        title: "Selamat Datang di ExpensePro",
+        title: "Selamat Datang di ExpenseBULL",
         body: "Aplikasi ini membantu Anda melacak, mengatur, dan menganalisis setiap rupiah pengeluaran Anda dengan mudah.",
         image: const Icon(Icons.account_balance_wallet, size: 150, color: Colors.blue),
         decoration: pageDecoration,
