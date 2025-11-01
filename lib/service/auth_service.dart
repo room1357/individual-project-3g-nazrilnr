@@ -5,18 +5,17 @@ class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal() {
-    // Memanggil fungsi untuk mengisi data dummy saat service dibuat
-    _seedInitialUser();
+    _seedInitialUser(); // Seed admin default (bisa dihapus kalau mau kosong)
   }
 
-  // SIMULASI DATABASE PENGGUNA TERDAFTAR
+  // Simulasi database pengguna terdaftar
   final Map<String, User> _registeredUsers = {};
   final Map<String, String> _userPasswords = {};
 
   User? _currentUser;
   User? get currentUser => _currentUser;
 
-  // Mengisi Akun Dummy (Admin untuk tujuan pengujian)
+  // Buat satu admin default agar sistem bisa diuji
   void _seedInitialUser() {
     const email = 'Bulkigus';
     const password = 'bull';
@@ -25,11 +24,11 @@ class AuthService {
       uid: 'admin_1', 
       email: email, 
       name: 'Muhammad Nazril Nur Rahman',
-      role: 'admin', // ROLE DITETAPKAN
+      role: 'admin',
       origin: 'Malang',
       gender: 'Laki-laki',
       dateOfBirth: DateTime(2005, 9, 15),
-      profileImageUrl: "assets/images/profil.jpg", // Admin memiliki foto default
+      profileImageUrl: "assets/images/profil.jpg",
     );
     
     _registeredUsers[email] = dummyAdmin;
@@ -37,7 +36,7 @@ class AuthService {
     debugPrint('Akun Admin Siap: $email / $password');
   }
 
-  // Method untuk mendaftarkan user baru
+  // Mendaftarkan user baru
   Future<String?> register(String name, String email, String password) async {
     await Future.delayed(const Duration(milliseconds: 500));
     
@@ -46,21 +45,21 @@ class AuthService {
     }
     
     final newUser = User(
-      uid: DateTime.now().millisecondsSinceEpoch.toString(), 
-      email: email, 
+      uid: DateTime.now().millisecondsSinceEpoch.toString(),
+      email: email,
       name: name,
-      role: 'user', // ROLE Default sebagai 'user' biasa
-      profileImageUrl: null, // User baru dimulai dengan foto kosong
+      role: 'user',
+      profileImageUrl: null,
     );
     
     _registeredUsers[email] = newUser;
-    _userPasswords[email] = password; 
+    _userPasswords[email] = password;
     
     _currentUser = newUser;
-    return null; 
+    return null;
   }
 
-  // Method untuk login
+  // Login user
   Future<String?> login(String email, String password) async {
     await Future.delayed(const Duration(milliseconds: 500));
     
@@ -76,13 +75,13 @@ class AuthService {
     }
   }
 
-  // Method untuk logout
+  // Logout user
   Future<void> logout() async {
     _currentUser = null;
     await Future.delayed(const Duration(milliseconds: 500));
   }
-  
-  // Method untuk memperbarui detail user
+
+  // Update profil user
   Future<String?> updateProfile({
     required String name,
     required String origin,
@@ -94,7 +93,6 @@ class AuthService {
     
     await Future.delayed(const Duration(milliseconds: 500));
     
-    // Perbarui objek _currentUser di state
     final updatedUser = User(
       uid: _currentUser!.uid,
       email: _currentUser!.email,
@@ -103,15 +101,16 @@ class AuthService {
       gender: gender,
       dateOfBirth: dateOfBirth,
       profileImageUrl: profileImageUrl,
-      role: _currentUser!.role, // Pertahankan role lama
+      role: _currentUser!.role,
     );
     
     _currentUser = updatedUser;
-    _registeredUsers[updatedUser.email] = updatedUser; // Update di "database"
+    _registeredUsers[updatedUser.email] = updatedUser;
 
     return null;
   }
 
+  // 🔹 Ambil UID berdasarkan nama
   String? getUserIdByName(String name) {
     try {
       final user = _registeredUsers.values.firstWhere((u) => u.name == name);
@@ -121,7 +120,21 @@ class AuthService {
     }
   }
 
+  // 🔹 Ambil nama berdasarkan UID
+  String getUserNameById(String id) {
+    try {
+      final user = _registeredUsers.values.firstWhere((u) => u.uid == id);
+      return user.name;
+    } catch (_) {
+      return 'Unknown';
+    }
+  }
+
+  // 🔹 Ambil semua user
   List<User> getAllUsers() {
     return _registeredUsers.values.toList();
   }
+
+  // 🔹 Cek apakah ada user login
+  bool get isLoggedIn => _currentUser != null;
 }

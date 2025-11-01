@@ -25,17 +25,18 @@ class _SharedProcessScreenState extends State<SharedProcessScreen> {
 
   void _shareExpense() async {
     await _sharedService.shareExpense(widget.expense, selectedNames);
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Expense berhasil dibagikan!')),
     );
-
-    Navigator.pop(context);
+    Navigator.pop(context, true); // kirim true supaya refresh
   }
 
   @override
   Widget build(BuildContext context) {
-    final allUsers = _authService.getAllUsers().where((u) => u.uid != widget.expense.ownerId).toList();
+    final allUsers = _authService
+        .getAllUsers()
+        .where((u) => u.uid != widget.expense.ownerId)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Bagikan Expense')),
@@ -43,7 +44,8 @@ class _SharedProcessScreenState extends State<SharedProcessScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Text('Expense: ${widget.expense.title}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('Expense: ${widget.expense.title}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Expanded(
               child: ListView(

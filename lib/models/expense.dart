@@ -1,3 +1,5 @@
+import 'user.dart';
+import '../service/auth_service.dart';
 class Expense {
   final String id;
   final String title;
@@ -69,4 +71,13 @@ class Expense {
       'description': description,
     };
   }
+  // Getter tambahan untuk nama owner
+  String get ownerName {
+    final user = AuthService().getAllUsers().firstWhere(
+      (u) => u.uid == ownerId,
+      orElse: () => User(uid: ownerId, name: 'Unknown', email: '', role: '', profileImageUrl: null),
+    );
+    return user.name;
+  }
+  
 }

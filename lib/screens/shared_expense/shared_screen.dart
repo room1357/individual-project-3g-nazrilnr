@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../service/auth_service.dart';
-import '../../service/shared_expense_service.dart';
 import '../../models/expense.dart';
+import '../../service/shared_expense_service.dart';
+import '../../service/auth_service.dart';
 
 class SharedExpenseScreen extends StatefulWidget {
   const SharedExpenseScreen({super.key});
@@ -20,11 +20,16 @@ class _SharedExpenseScreenState extends State<SharedExpenseScreen> {
   @override
   void initState() {
     super.initState();
+    _sharedService.expensesNotifier.addListener(_updateExpenses);
     _loadExpenses();
   }
 
   void _loadExpenses() async {
     await _sharedService.loadExpenses();
+    _updateExpenses();
+  }
+
+  void _updateExpenses() {
     final currentUser = _authService.currentUser;
     if (currentUser == null) return;
 
@@ -32,6 +37,40 @@ class _SharedExpenseScreenState extends State<SharedExpenseScreen> {
       sentExpenses = _sharedService.getSharedByUser(currentUser.name);
       receivedExpenses = _sharedService.getReceivedByUser(currentUser.name);
     });
+  }
+
+  void _openDetail(Expense expense) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(expense.title),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Jumlah: ${expense.amount}'),
+              Text('Kategori: ${expense.category}'),
+              Text('Tanggal: ${expense.date}'),
+              Text('Deskripsi: ${expense.description}'),
+              Text('Owner: ${expense.ownerName}'),
+              Text('Dibagikan ke: ${expense.participantIds.join(', ')}'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _sharedService.expensesNotifier.removeListener(_updateExpenses);
+    super.dispose();
   }
 
   @override
@@ -50,15 +89,15 @@ class _SharedExpenseScreenState extends State<SharedExpenseScreen> {
         ),
         body: TabBarView(
           children: [
-            _buildList(sentExpenses, true),
-            _buildList(receivedExpenses, false),
+            _buildList(sentExpenses),
+            _buildList(receivedExpenses),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildList(List<Expense> list, bool isOwner) {
+  Widget _buildList(List<Expense> list) {
     if (list.isEmpty) {
       return const Center(child: Text('Belum ada expense.'));
     }
@@ -70,11 +109,15 @@ class _SharedExpenseScreenState extends State<SharedExpenseScreen> {
         return Card(
           margin: const EdgeInsets.all(8),
           child: ListTile(
-            title: Text(e.title),
-            subtitle: Text(
-              'Jumlah: ${e.amount}\nDeskripsi: ${e.description}\n'
-              '${isOwner ? 'Dibagikan ke: ' : 'Dari: '}${isOwner ? e.participantIds.join(', ') : e.ownerId}',
+            title: Text(
+              e.title,
+              overflow: TextOverflow.ellipsis,
             ),
+            subtitle: Text(
+              'Jumlah: ${e.amount}\nDeskripsi: ${e.description}',
+              overflow: TextOverflow.ellipsis,
+            ),
+            onTap: () => _openDetail(e),
           ),
         );
       },
