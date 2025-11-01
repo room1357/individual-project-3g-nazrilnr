@@ -7,6 +7,8 @@ import 'edit_expense_screen.dart';
 import '../../utils/currency_utils.dart';
 import '../../utils/date_utils.dart';
 import '../../service/auth_service.dart'; 
+import '../../service/shared_expense_service.dart'; 
+import '../../screens/shared_expense/shared_proses_expense.dart';
 
 class AdvancedExpenseListScreen extends StatefulWidget {
   const AdvancedExpenseListScreen({super.key});
@@ -389,18 +391,22 @@ class _AdvancedExpenseListScreenState extends State<AdvancedExpenseListScreen> {
         ),
         actions: [
           if (isOwner)
-            TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.share, size: 18),
-              label: const Text('Share Data'),
-              style: TextButton.styleFrom(foregroundColor: Colors.teal),
-            ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style:
-                TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
-            child: const Text('Tutup'),
-          ),
+  TextButton.icon(
+    onPressed: () async {
+      await SharedService().loadExpenses();
+      Navigator.pop(context);
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SharedProcessScreen(expense: expense),
+        ),
+      );
+      _loadInitialData();
+    },
+    icon: const Icon(Icons.share, size: 18),
+    label: const Text('Share Data'),
+    style: TextButton.styleFrom(foregroundColor: Colors.teal),
+  ),
           if (isOwner)
             TextButton(
               onPressed: () async {

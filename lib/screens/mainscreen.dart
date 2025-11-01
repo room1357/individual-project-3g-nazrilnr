@@ -5,6 +5,7 @@ import 'statictic/statistic_screen.dart';
 import 'advenced_expense/advenced_expense_list_screen.dart';
 import 'profile/profile_screen.dart';
 import 'category/category_screen.dart';
+import 'shared_expense/shared_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -21,7 +22,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const StatisticsScreen(),
     const AdvancedExpenseListScreen(),
-    const ProfileScreen(), // Shared (menggunakan Profile)
+    const SharedExpenseScreen(), // Shared (menggunakan Profile)
     const CategoryScreen(),
   ];
 

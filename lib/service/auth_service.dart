@@ -111,4 +111,17 @@ class AuthService {
 
     return null;
   }
+
+  String? getUserIdByName(String name) {
+    try {
+      final user = _registeredUsers.values.firstWhere((u) => u.name == name);
+      return user.uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<User> getAllUsers() {
+    return _registeredUsers.values.toList();
+  }
 }
